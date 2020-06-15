@@ -25,17 +25,19 @@ class floorPed {
 	int y; // Y size of the Floor
 	double kS; //Static sensitivity coefficient 
 	double kD; //Dynamic sensitivity coefficient
-	double alpha; //Decay factor for the Dynamic Field
+	double alpha; //Diffuse factor for the Dynamic Field
+	double beta; //Decay factor for Dynamic Field
 	std::vector<std::vector<int>> door; //Vector which holds doors (vectors with x and y coordinates)
 	std::vector<double> d_L; //Holds the cell furthest away from every door
 
-	void initializeFloor(int x_, int y_,double kS_, double kD_, double alpha_ , std::vector<std::vector<int>> door_) {
+	void initializeFloor(int x_, int y_,double kS_, double kD_, double alpha_ , double beta_,  std::vector<std::vector<int>> door_) {
 		
 		x = x_;
 		y = y_;
 		kS = kS_;
 		kD = kD_;
 		alpha = alpha_;
+		beta = beta_;
 		door = door_;
 		
 		startMat();
@@ -57,7 +59,9 @@ private:
 	void calcProbMat(pedestrian& p1);
 	void isPedSafe(int p);
 	void clearPed(int p);
-
+	void pedDecide();
+	void findNResolveConflicts(int p);
+	
 public:
 	
 	bool addPed(pedestrian p1);
@@ -65,10 +69,13 @@ public:
 	void printMovements();
 	void printStatField();
 	int numberOfPed();
+	void singleRunSave();
+	int numberOfSavedPed();
+	void singleRunAllTogether();
 	void writeMovements2File(std::string fileName);
 	void writeStatField2File(std::string fileName);
 
-	floorPed(int x_, int y_, double kS_, double kD_, double alpha_, std::vector<std::vector<int>> door_) {
-		initializeFloor(x_, y_, kS_, kD_, alpha_, door_);
+	floorPed(int x_, int y_, double kS_, double kD_, double alpha_, double beta_, std::vector<std::vector<int>> door_) {
+		initializeFloor(x_, y_, kS_, kD_, alpha_, beta_, door_);
 	}
 };

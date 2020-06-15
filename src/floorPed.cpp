@@ -43,8 +43,8 @@ void floorPed::initMat() {
 	for (int k = 0; k < door.size(); k++) {
 		occupied[door[k][0]][door[k][1]] = 0;
 		obstacle[door[k][0]][door[k][1]] = 1;
-		std::cout << "Door added at: " << door[k][0] << "," << door[k][1] << "\n";
-		std::cout << "Obstacle: " << obstacle[door[k][0]][door[k][1]] << "\n";
+		//std::cout << "Door added at: " << door[k][0] << "," << door[k][1] << "\n";
+		//std::cout << "Obstacle: " << obstacle[door[k][0]][door[k][1]] << "\n";
 	}
 }
 
@@ -133,7 +133,6 @@ void floorPed::writeStatField2File(std::string fileName) {
 /*Adds obstacles to the edges of the floor to create a wall and stop
 the pedestrians to go out*/
 void floorPed::buildWall() {
-
 	for (int i = 0; i < x; i++) {
 		obstacle[i][0] = 0;
 		obstacle[i][y-1] = 0;
@@ -144,22 +143,39 @@ void floorPed::buildWall() {
 		obstacle[x-1][j] = 0;
 
 	}
-
 }
 
-/*Not finished, will calculate and update the dynamic field*/
-void floorPed::dynamicDecay() {
-	//std::cout << "Entered dynamic decay" << "\n";
-	for (int i = 0; i < x; i++) {
-		for (int j = 0; j < y; j++) {
-			dynField[i][j] -= 1 * alpha;
+/*Not finished, will calculate and update the dynamic field. It will regulate only diffusion and decay.*/
+/*void floorPed::dynamicDecay() {
+	for (int i = 1; i < x-1; i++) {
+		for (int j = 1; j < y-1; j++) {
+
+			if (dynField[i][j] < 0) {
+				dynField[i][j] = 0;
+			}
+
+			double temp = (rand()%10)*(0.1);
+
+			if (temp <= beta) {
+				dynField[i][j] -= 1;
+				if (temp <= alpha + beta) {
+					double difI = (rand() % 3) - 1;
+					double difJ = (rand() % 3) -1;
+					dynField[i][j] -= 1;
+					dynField[difI][difJ] += 1;
+				}
+			}
+			
+			if (dynField[i][j] < 0) {
+				dynField[i][j] = 0;
+			}
+
 		}
 	}
 }
-
+*/
 /*Adds a pedestrian to the floor if the cell isnt occupied or has an obstacle*/
 bool floorPed::addPed(pedestrian p1) {
-	
 	if (obstacle[p1.position[0]][p1.position[1]] == 0 || occupied[p1.position[0]][p1.position[1]] == 1) {
 		return 0;
 	}
@@ -172,22 +188,21 @@ bool floorPed::addPed(pedestrian p1) {
 
 /*Checks if the pedestrian is standing at the door or not and "saves" it*/
 void floorPed::isPedSafe(int p) {
-	//std::cout << "entered isPedSafe" << "\n";
 	for (int i = 0; i < door.size(); i++) {
 		if (pedVec[p].position[0] == door[i][0] && pedVec[p].position[1] == door[i][1]) {
 			pedVec[p].escape = 1;
 		}
 	}
-	
 }
 
 /*Calculates the probability matrix of all pedestrians on the floor*/
 void floorPed::calcProbMat(pedestrian& p1) {
-	//std::cout << "entered calcProbMat" << "\n";
 	int i = p1.position[0];
 	int j = p1.position[1];
 	double N = 0;
+
 	p1.probMat[0][0] = p1.probMat[2][0] = p1.probMat[1][1] = p1.probMat[0][2] = p1.probMat[2][2] = 0;
+	
 	double a = expFunction(i, j - 1);
 	double b = expFunction(i - 1, j);
 	double c = expFunction(i, j + 1);
@@ -215,48 +230,107 @@ double floorPed::expFunction(int i, int j) {
 	return exp(kD * dynField[i][j])*exp(kS*statField[i][j])*(1 - occupied[i][j])*obstacle[i][j];
 }
 
-/*
-void floorPed::singleRun() {
-	//std::cout << "Entered the single run" << "\n";
-	dynamicDecay();
-	//resetOccupied();
-	int toErase = 0;
-	for (int i = 0; i < pedVec.size(); i++) {
-		calcProbMat(pedVec[i]);
-		occupied[pedVec[i].position[0]][pedVec[i].position[1]] = 0;
-		pedVec[i].move();
-		isPedSafe(i);
 
-		if (pedVec[i].escape == 1){
-			//occupied[pedVec[i].position[0]][pedVec[i].position[1]] = 0;
-			pedVec[i] = pedVec[pedVec.size() - toErase - 1];
-			toErase++;
-		}
-		else {
-			occupied[pedVec[i].position[0]][pedVec[i].position[1]] = 1;
-		}
-	}
-	clearPed(toErase);
-}
-*/
-
-/*Really delicate function that 
+/*Function that:
 1) calculates the probability matrix of the pedestrians
 2) "empties" the floor
 3) The pedestrians choose their next move and either take it or stay standing
 4) Pedestrians are "added" back to the floor
 5) The dynamic field is updated
-NOTE: The pedestrians still arent saved, there is a problem with it*/
+NOTE: The pedestrians still arent saved in this function*/
 void floorPed::singleRun() {
-	//std::cout << "Entered the single run" << "\n";
-	dynamicDecay();
+	//dynamicDecay();
 	for (int i = 0; i < pedVec.size(); i++) {
 		calcProbMat(pedVec[i]);
 		occupied[pedVec[i].position[0]][pedVec[i].position[1]] = 0;
 		pedVec[i].move();
 		dynField[pedVec[i].position[0]][pedVec[i].position[1]] += 1;
-		//isPedSafe(pedVec[i]);
 		occupied[pedVec[i].position[0]][pedVec[i].position[1]] = 1;
+	}
+}
+
+void floorPed::singleRunSave() {
+	//dynamicDecay();
+	for (int p = 0; p < pedVec.size(); p++) {
+		isPedSafe(p);
+		if (pedVec[p].escape == 1) {
+			occupied[pedVec[p].position[0]][pedVec[p].position[1]] = 0;
+			p++;
+		}
+		else {
+			calcProbMat(pedVec[p]);
+			occupied[pedVec[p].position[0]][pedVec[p].position[1]] = 0;
+			pedVec[p].move();
+			dynField[pedVec[p].position[0]][pedVec[p].position[1]] += 1;
+			occupied[pedVec[p].position[0]][pedVec[p].position[1]] = 1;
+		}
+	}
+}
+
+void floorPed::singleRunAllTogether() {
+
+	pedDecide();
+
+	for (int p = 0; p < pedVec.size(); p++) {
+		findNResolveConflicts(p);
+	}
+
+	for (int p = 0; p < pedVec.size(); p++) {
+		if (pedVec[p].escape == 1) {
+			occupied[pedVec[p].position[0]][pedVec[p].position[1]] = 0;
+			p++;
+		}
+		else {
+			occupied[pedVec[p].position[0]][pedVec[p].position[1]] = 0;
+			pedVec[p].position[0] = pedVec[p].desiredMove[0];
+			pedVec[p].position[1] = pedVec[p].desiredMove[1];
+			dynField[pedVec[p].position[0]][pedVec[p].position[1]] += 1;
+			occupied[pedVec[p].position[0]][pedVec[p].position[1]] = 1;
+		}
+	}
+	
+}
+
+/*All pedestrians calculate their probability matrix, and from there they will choose which cell they will move to.*/
+void floorPed::pedDecide() {
+	for (int i = 0; i < pedVec.size(); i++) {
+		calcProbMat(pedVec[i]);
+		pedVec[i].chooseMove();
+	}
+}
+
+/*Converts the desired move of the "loser" in its actual position, so the "loser" wont move, and the "winner" will*/
+void floorPed::findNResolveConflicts(int p) {
+	int tempX = pedVec[p].position[0];
+	int tempY = pedVec[p].position[1];
+	for (int j = 0; j < pedVec.size(); j++) {
+		std::cout << "Entered for loop number:" << j <<"\n";
+		/*Makes sure we dont check the pedestrian with itself*/
+		if (pedVec[j].position[0] == tempX && pedVec[j].position[1] == tempY) {
+			j++;
+			if (j >= pedVec.size()) {
+				return;
+			}
+		}
+
+		if (pedVec[p].desiredMove[0] == pedVec[j].desiredMove[0] && pedVec[p].desiredMove[1] == pedVec[j].desiredMove[1]) {
+			std::cout << "Conflict found" << "\n";
+			
+			if (pedVec[p].probMax - pedVec[j].probMax > 0){
+				std::cout << "Entered if 1" << "\n";
+				std::cout << pedVec[p].probMax << "\n";
+				std::cout << pedVec[j].probMax << "\n";
+				pedVec[j].desiredMove[0] = pedVec[j].position[0];
+				pedVec[j].desiredMove[1] = pedVec[j].position[1];
+			}
+			else {
+				std::cout << "Entered else" << "\n";
+				std::cout << pedVec[p].probMax << "\n";
+				std::cout << pedVec[j].probMax << "\n";
+				pedVec[p].desiredMove[0] = pedVec[j].position[0];
+				pedVec[p].desiredMove[1] = pedVec[j].position[1];
+			}
+		}
 	}
 }
 
@@ -265,7 +339,6 @@ void floorPed::clearPed(int p) {
 	{
 		pedVec.pop_back();
 	}
-	//std::cout << "Pedestrian " << p << "escaped" << "\n";
 }
 
 void floorPed::resetOccupied() {
@@ -302,14 +375,12 @@ void floorPed::writeMovements2File(std::string fileName) {
 				}
 			}*/
 			if (j == y-1) {
-
 				if (obstacle[i][j] == 0) {
 					file << -1;
 				}
 				else {
 					file << occupied[i][j];
 				}
-
 			}
 			else {
 				if (obstacle[i][j] == 0) {
@@ -322,14 +393,22 @@ void floorPed::writeMovements2File(std::string fileName) {
 					}
 				}
 			}
-			
 		}
 		file << "\n";
 	}
-	std::cout << ped << "\n";
 	file.close();
 }
 
 int floorPed::numberOfPed() {
 	return pedVec.size();
+}
+
+int floorPed::numberOfSavedPed() {
+	int savedPed = 0;
+	for (int i = 0; i < pedVec.size(); i++) {
+		if (pedVec[i].escape == 1) {
+			savedPed++;
+		}
+	}
+	return savedPed;
 }
