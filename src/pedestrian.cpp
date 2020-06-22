@@ -52,7 +52,7 @@ void pedestrian::chooseMove() {
 				probMax = maxTemp;
 				newX = i;
 				newY = j;
-				std::cout << i << "," << j << "\n";
+				//std::cout << i << "," << j << "\n";
 			}
 		}
 	}
@@ -60,7 +60,7 @@ void pedestrian::chooseMove() {
 	desiredMove[0] = position[0] + (newX - 1);
 	desiredMove[1] = position[1] + (newY - 1);
 
-	std::cout << "Pedestrian with position: " << position[0] <<","<< position[1] << "wants to move to: " << desiredMove[0] << "," << desiredMove[1] << "\n" ;
+	//std::cout << "Pedestrian with position: " << position[0] <<","<< position[1] << "wants to move to: " << desiredMove[0] << "," << desiredMove[1] << "\n" ;
 }
 
 
@@ -76,6 +76,6 @@ void pedestrian::returnProbMat() {
 }
 
 std::vector<int> pedestrian::returnPosition() {
-	return this->position;
+	return position;
 }
 

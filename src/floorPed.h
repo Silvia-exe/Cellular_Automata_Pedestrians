@@ -64,7 +64,7 @@ private:
 	
 public:
 	
-	bool addPed(pedestrian p1);
+	bool addPed(pedestrian & p1);
 	void singleRun();
 	void printMovements();
 	void printStatField();
