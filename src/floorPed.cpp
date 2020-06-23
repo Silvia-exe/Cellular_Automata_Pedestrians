@@ -43,8 +43,6 @@ void floorPed::initMat() {
 	for (int k = 0; k < door.size(); k++) {
 		occupied[door[k][0]][door[k][1]] = 0;
 		obstacle[door[k][0]][door[k][1]] = 1;
-		//std::cout << "Door added at: " << door[k][0] << "," << door[k][1] << "\n";
-		//std::cout << "Obstacle: " << obstacle[door[k][0]][door[k][1]] << "\n";
 	}
 }
 
@@ -173,6 +171,7 @@ void floorPed::buildWall() {
 	}
 }
 */
+
 /*Adds a pedestrian to the floor if the cell isnt occupied or has an obstacle*/
 bool floorPed::addPed(pedestrian & p1) {
 	if (obstacle[p1.position[0]][p1.position[1]] == 0 || occupied[p1.position[0]][p1.position[1]] == 1) {
@@ -195,33 +194,46 @@ void floorPed::isPedSafe(int p) {
 }
 
 /*Calculates the probability matrix of all pedestrians on the floor*/
-void floorPed::calcProbMat(pedestrian& p1) {
-	int i = p1.position[0];
-	int j = p1.position[1];
+void floorPed::calcProbMat(int p) {
+	int i = pedVec[p].position[0];
+	int j = pedVec[p].position[1];
 	double N = 0;
 
-	p1.probMat[0][0] = p1.probMat[2][0] = p1.probMat[1][1] = p1.probMat[0][2] = p1.probMat[2][2] = 0;
+	pedVec[p].probMat[0][0] = pedVec[p].probMat[2][0] = pedVec[p].probMat[0][2] = pedVec[p].probMat[2][2] = 0;
 	
 	double a = expFunction(i, j - 1);
 	double b = expFunction(i - 1, j);
 	double c = expFunction(i, j + 1);
 	double d = expFunction(i + 1, j);
-	
-	
-	N = a + b + c + d;
+
+	occupied[i][j] = 0; // This is done so that the probability can be calculated as if the cell wasnt occupied 
+	double e = expFunction(i, j);
+	occupied[i][j] = 1;
+
+	N = a + b + c + d + e;
 
 	if (N == 0) {
-		p1.probMat[1][0] = 0;
-		p1.probMat[0][1] = 0;
-		p1.probMat[1][2] = 0;
-		p1.probMat[2][1] = 0;
+		pedVec[p].probMat[1][0] = 0;
+		pedVec[p].probMat[0][1] = 0;
+		pedVec[p].probMat[1][2] = 0;
+		pedVec[p].probMat[2][1] = 0;
+		pedVec[p].probMat[1][1] = 1;
 	}
 	else {
-		p1.probMat[1][0] = (1/N) * a;
-		p1.probMat[0][1] = (1/N) * b;
-		p1.probMat[1][2] = (1/N) * c;
-		p1.probMat[2][1] = (1/N) * d;
+		pedVec[p].probMat[1][0] = (1/N) * a;
+		pedVec[p].probMat[0][1] = (1/N) * b;
+		pedVec[p].probMat[1][2] = (1/N) * c;
+		pedVec[p].probMat[2][1] = (1/N) * d;
+		pedVec[p].probMat[1][1] = (1/N) * e;
 	}
+	/*
+	for (int x = 0; x < 3; x++) {
+		for (int y = 0; y < 3; y++) {
+			std::cout << pedVec[p].probMat[x][y] << ":";
+		}
+		std::cout << "\n";
+	}
+	*/
 }
 
 /*Exponential function that is the basis on calculating the probability matrix*/
@@ -240,7 +252,7 @@ NOTE: The pedestrians still arent saved in this function*/
 void floorPed::singleRun() {
 	//dynamicDecay();
 	for (int i = 0; i < pedVec.size(); i++) {
-		calcProbMat(pedVec[i]);
+		calcProbMat(i);
 		occupied[pedVec[i].position[0]][pedVec[i].position[1]] = 0;
 		pedVec[i].move();
 		dynField[pedVec[i].position[0]][pedVec[i].position[1]] += 1;
@@ -257,7 +269,7 @@ void floorPed::singleRunSave() {
 			//p++;
 		}
 		else {
-			calcProbMat(pedVec[p]);
+			calcProbMat(p);
 			occupied[pedVec[p].position[0]][pedVec[p].position[1]] = 0;
 			pedVec[p].move();
 			dynField[pedVec[p].position[0]][pedVec[p].position[1]] += 1;
@@ -272,9 +284,11 @@ void floorPed::singleRunAllTogether() {
 
 	for (int p = 0; p < pedVec.size(); p++) {
 		findNResolveConflicts(p);
+		isPedSafe(p);
 	}
 
 	for (int p = 0; p < pedVec.size(); p++) {
+		
 		if (pedVec[p].escape == 1) {
 		std::cout << "entered escape if" << "\n";
 			occupied[pedVec[p].position[0]][pedVec[p].position[1]] = 0;
@@ -290,13 +304,14 @@ void floorPed::singleRunAllTogether() {
 
 /*All pedestrians calculate their probability matrix, and from there they will choose which cell they will move to.*/
 void floorPed::pedDecide() {
-	for (int i = 0; i < pedVec.size(); i++) {
-		calcProbMat(pedVec[i]);
-		pedVec[i].chooseMove();
+	for (int p = 0; p < pedVec.size(); p++) {
+		calcProbMat(p);
+		pedVec[p].chooseMove();
 	}
 }
 
-/*Converts the desired move of the "loser" in its actual position, so the "loser" wont move, and the "winner" will*/
+/*Converts the desired move of the "loser" in its actual position, so the "loser" wont move, 
+and the "winner" will*/
 void floorPed::findNResolveConflicts(int p) {
 	for (int j = 0; j < pedVec.size(); j++) {
 		if (j != p) {
@@ -313,7 +328,7 @@ void floorPed::findNResolveConflicts(int p) {
 					}
 				}
 				else {
-					pedVec[p].desiredMove = pedVec[p].position;
+					//pedVec[p].desiredMove = pedVec[p].position;
 				}
 			}
 		}
@@ -355,11 +370,6 @@ void floorPed::writeMovements2File(std::string fileName) {
 	file.open(fileName + ".txt");
 	for (int i = 0; i < x; i++) {
 		for (int j = 0; j < y; j++) {
-			/*for (int k = 0; k < door.size(); j++) {
-				if (i == door[k][0] && j == door[k][1]) {
-					file << 0;
-				}
-			}*/
 			if (j == y-1) {
 				if (obstacle[i][j] == 0) {
 					file << -1;

@@ -56,7 +56,7 @@ private:
 	void calcDL();
 	void calcStatF();
 	void statFieldInit();
-	void calcProbMat(pedestrian& p1);
+	void calcProbMat(int p);
 	void isPedSafe(int p);
 	void clearPed(int p);
 	void pedDecide();
