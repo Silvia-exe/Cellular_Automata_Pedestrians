@@ -57,9 +57,11 @@ private:
 	void calcStatF();
 	void statFieldInit();
 	void calcProbMat(int p);
+	void calcProbMatDiag(int p);
 	void isPedSafe(int p);
 	void clearPed(int p);
 	void pedDecide();
+	void pedDecideDiag();
 	void findNResolveConflicts(int p);
 	
 public:
@@ -72,6 +74,7 @@ public:
 	void singleRunSave();
 	int numberOfSavedPed();
 	void singleRunAllTogether();
+	void singleRunDiag();
 	void writeMovements2File(std::string fileName);
 	void writeStatField2File(std::string fileName);
 

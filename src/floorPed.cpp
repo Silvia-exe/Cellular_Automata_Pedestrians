@@ -201,40 +201,66 @@ void floorPed::calcProbMat(int p) {
 
 	pedVec[p].probMat[0][0] = pedVec[p].probMat[2][0] = pedVec[p].probMat[0][2] = pedVec[p].probMat[2][2] = 0;
 	
-	double a = expFunction(i, j - 1);
-	double b = expFunction(i - 1, j);
-	double c = expFunction(i, j + 1);
+	double l = expFunction(i, j - 1);
+	double u = expFunction(i - 1, j);
+	double r = expFunction(i, j + 1);
 	double d = expFunction(i + 1, j);
 
 	occupied[i][j] = 0; // This is done so that the probability can be calculated as if the cell wasnt occupied 
-	double e = expFunction(i, j);
+	double c = expFunction(i, j);
 	occupied[i][j] = 1;
 
-	N = a + b + c + d + e;
+	N = l + u + r + d + c;
+	double norm = 1 / N;
 
-	if (N == 0) {
-		pedVec[p].probMat[1][0] = 0;
-		pedVec[p].probMat[0][1] = 0;
-		pedVec[p].probMat[1][2] = 0;
-		pedVec[p].probMat[2][1] = 0;
-		pedVec[p].probMat[1][1] = 1;
-	}
-	else {
-		pedVec[p].probMat[1][0] = (1/N) * a;
-		pedVec[p].probMat[0][1] = (1/N) * b;
-		pedVec[p].probMat[1][2] = (1/N) * c;
-		pedVec[p].probMat[2][1] = (1/N) * d;
-		pedVec[p].probMat[1][1] = (1/N) * e;
-	}
-	/*
-	for (int x = 0; x < 3; x++) {
+	pedVec[p].probMat[1][0] = (1/N) * l;
+	pedVec[p].probMat[0][1] = (1/N) * u;
+	pedVec[p].probMat[1][2] = (1/N) * r;
+	pedVec[p].probMat[2][1] = (1/N) * d;
+	pedVec[p].probMat[1][1] = (1/N) * c;
+	
+}
+
+void floorPed::calcProbMatDiag(int p) {
+	int i = pedVec[p].position[0];
+	int j = pedVec[p].position[1];
+	double N = 0;
+
+	double l = expFunction(i, j - 1);
+	double u = expFunction(i - 1, j);
+	double r = expFunction(i, j + 1);
+	double d = expFunction(i + 1, j);
+	double ul = expFunction(i - 1, j - 1);
+	double ur = expFunction(i - 1, j + 1);
+	double bl = expFunction(i + 1, j - 1);
+	double br = expFunction(i + 1, j + 1);
+
+	occupied[i][j] = 0; // This is done so that the probability can be calculated as if the cell wasnt occupied 
+	double c = expFunction(i, j);
+	occupied[i][j] = 1;
+
+	N = l + u + r + d + ur + ul + br + bl + c;
+	double norm = 1 / N;
+
+	pedVec[p].probMat[1][0] = norm * l;
+	pedVec[p].probMat[0][1] = norm * u;
+	pedVec[p].probMat[1][2] = norm * r;
+	pedVec[p].probMat[2][1] = norm * d;
+	pedVec[p].probMat[1][1] = norm * c;
+	pedVec[p].probMat[0][0] = norm * ul;
+	pedVec[p].probMat[0][2] = norm * ur;
+	pedVec[p].probMat[2][0] = norm * bl;
+	pedVec[p].probMat[2][2] = norm * br;
+
+	/*for (int x = 0; x < 3; x++) {
 		for (int y = 0; y < 3; y++) {
 			std::cout << pedVec[p].probMat[x][y] << ":";
 		}
 		std::cout << "\n";
 	}
-	*/
+	std::cout << "\n";*/
 }
+
 
 /*Exponential function that is the basis on calculating the probability matrix*/
 double floorPed::expFunction(int i, int j) {
@@ -302,10 +328,37 @@ void floorPed::singleRunAllTogether() {
 	}
 }
 
+void floorPed::singleRunDiag() {
+
+	pedDecideDiag();
+
+	for (int p = 0; p < pedVec.size(); p++) {
+		findNResolveConflicts(p);
+	}
+
+	for (int p = 0; p < pedVec.size(); p++) {
+		occupied[pedVec[p].position[0]][pedVec[p].position[1]] = 0;
+		pedVec[p].position = pedVec[p].desiredMove;
+		//std::cout << pedVec[p].position[0] << ", " << pedVec[p].position[1] << "\n";
+		occupied[pedVec[p].position[0]][pedVec[p].position[1]] = 1;
+		//std::cout << occupied[pedVec[p].position[0]][pedVec[p].position[1]] << "\n";
+	}
+	
+	//std::cout << "Single Run finished" << "\n";
+
+}
+
 /*All pedestrians calculate their probability matrix, and from there they will choose which cell they will move to.*/
 void floorPed::pedDecide() {
 	for (int p = 0; p < pedVec.size(); p++) {
 		calcProbMat(p);
+		pedVec[p].chooseMove();
+	}
+}
+
+void floorPed::pedDecideDiag() {
+	for (int p = 0; p < pedVec.size(); p++) {
+		calcProbMatDiag(p);
 		pedVec[p].chooseMove();
 	}
 }
