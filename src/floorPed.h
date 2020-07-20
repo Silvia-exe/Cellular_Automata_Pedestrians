@@ -42,7 +42,7 @@ class floorPed {
 		
 		startMat();
 		initMat();
-		buildWall();
+		//buildWall();
 	}
 
 private:
@@ -63,6 +63,7 @@ private:
 	void pedDecide();
 	void pedDecideDiag();
 	void findNResolveConflicts(int p);
+	void resetSavedPed(int p);
 	
 public:
 	

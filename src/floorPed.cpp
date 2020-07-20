@@ -330,6 +330,10 @@ void floorPed::singleRunAllTogether() {
 
 void floorPed::singleRunDiag() {
 
+	for (int p = 0; p < pedVec.size(); p++) {
+		isPedSafe(p);
+	}
+
 	pedDecideDiag();
 
 	for (int p = 0; p < pedVec.size(); p++) {
@@ -337,29 +341,50 @@ void floorPed::singleRunDiag() {
 	}
 
 	for (int p = 0; p < pedVec.size(); p++) {
-		occupied[pedVec[p].position[0]][pedVec[p].position[1]] = 0;
-		pedVec[p].position = pedVec[p].desiredMove;
-		//std::cout << pedVec[p].position[0] << ", " << pedVec[p].position[1] << "\n";
-		occupied[pedVec[p].position[0]][pedVec[p].position[1]] = 1;
-		//std::cout << occupied[pedVec[p].position[0]][pedVec[p].position[1]] << "\n";
+		if (pedVec[p].escape == 1) {
+			occupied[pedVec[p].position[0]][pedVec[p].position[1]] = 0;
+			resetSavedPed(p);
+			//std::cout << "Pedestrian is at the door and it is saved!" << pedVec[p].position[0] << ", " << pedVec[p].position[1]<< "\n";
+			//std::cout << "It should be 1: " << pedVec[p].escape << "\n";
+		}
+		else {
+			occupied[pedVec[p].position[0]][pedVec[p].position[1]] = 0;
+			pedVec[p].position = pedVec[p].desiredMove;
+			isPedSafe(p);
+			occupied[pedVec[p].position[0]][pedVec[p].position[1]] = 1;
+			//std::cout << "ped number " << p << "\n";
+			//pedVec[p].returnProbMat();
+			//std::cout << "\n";
+		}
+		
 	}
-	
-	//std::cout << "Single Run finished" << "\n";
-
 }
 
 /*All pedestrians calculate their probability matrix, and from there they will choose which cell they will move to.*/
 void floorPed::pedDecide() {
 	for (int p = 0; p < pedVec.size(); p++) {
-		calcProbMat(p);
-		pedVec[p].chooseMove();
+		if (pedVec[p].escape == 0) {
+			calcProbMat(p);
+			pedVec[p].chooseMove();
+		}
+	}
+}
+
+void floorPed::resetSavedPed(int p) {
+	pedVec[p].desiredMove = { -1,-1 };
+	for (int i = 0; i < 3; i++){
+		for (int j = 0; j < 3; j++) {
+			pedVec[p].probMat[i][j] = -1;
+		}
 	}
 }
 
 void floorPed::pedDecideDiag() {
 	for (int p = 0; p < pedVec.size(); p++) {
-		calcProbMatDiag(p);
-		pedVec[p].chooseMove();
+		if (pedVec[p].escape == 0) {
+			calcProbMatDiag(p);
+			pedVec[p].chooseMove();
+		}
 	}
 }
 
@@ -367,7 +392,8 @@ void floorPed::pedDecideDiag() {
 and the "winner" will*/
 void floorPed::findNResolveConflicts(int p) {
 	for (int j = 0; j < pedVec.size(); j++) {
-		if (j != p) {
+		if (j != p && pedVec[p].escape == 0 && pedVec[j].escape == 0){
+			//std::cout << "conflict found between" << j << " and " << p << "\n";
 			if (pedVec[p].desiredMove == pedVec[j].desiredMove) {
 				if (pedVec[p].probMax > pedVec[j].probMax) {
 					pedVec[j].desiredMove = pedVec[j].position;
@@ -381,7 +407,7 @@ void floorPed::findNResolveConflicts(int p) {
 					}
 				}
 				else {
-					//pedVec[p].desiredMove = pedVec[p].position;
+					pedVec[p].desiredMove = pedVec[p].position;
 				}
 			}
 		}

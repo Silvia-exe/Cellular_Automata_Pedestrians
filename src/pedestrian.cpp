@@ -55,7 +55,6 @@ void pedestrian::chooseMove() {
 	desiredMove[0] = position[0] + (newX - 1);
 	desiredMove[1] = position[1] + (newY - 1);
 
-	//std::cout << "Desired move: " << newX << ", " << newY << "\n";
 }
 
 
