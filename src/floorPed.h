@@ -64,6 +64,7 @@ private:
 	void pedDecideDiag();
 	void findNResolveConflicts(int p);
 	void resetSavedPed(int p);
+	void statFieldNorm();
 	
 public:
 	

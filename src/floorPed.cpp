@@ -32,6 +32,7 @@ Builds walls around the room and finally,
 adds exits as doors*/
 void floorPed::initMat() {
 	statFieldInit();
+	statFieldNorm();
 	for (int i = 0; i < x; i++) {
 		for (int j = 0; j < y; j++) {
 			obstacle[i][j] = 1;
@@ -49,7 +50,7 @@ void floorPed::initMat() {
 
 /*Calculates the furthest away cell from every door*/
 void floorPed::calcDL() {
-	std::cout << "Entered calcDL" << "\n";
+	//std::cout << "Entered calcDL" << "\n";
 	std::vector<int> d(door.size());
 	for (int i = 0; i < x; i++) {
 		for (int j = 0 ; j < y; j++) {
@@ -65,7 +66,7 @@ void floorPed::calcDL() {
 
 /*Calculates the value of the static field for every door*/
 void floorPed::calcStatF() {
-	std::cout << "Entered calcStatF" << "\n";
+	//std::cout << "Entered calcStatF" << "\n";
 	for (int i = 0; i < x; i++) {
 		for (int j = 0; j < y; j++) {
 			for (int k = 0; k < door.size(); k++) {
@@ -77,7 +78,7 @@ void floorPed::calcStatF() {
 
 /*Sets and calculates the final static field of the floor*/
 void floorPed::statFieldInit() {
-	std::cout << "Entered statFieldInit" << "\n";
+	//std::cout << "Entered statFieldInit" << "\n";
 	calcDL();
 	calcStatF();
 	if (door.size() == 1) {
@@ -95,6 +96,26 @@ void floorPed::statFieldInit() {
 			}
 		}
 	}
+}
+
+/*Sums all values of the static field in N. 
+All values of the static field are divided by N (and x*y)*/
+void floorPed::statFieldNorm() {
+	double N = 0;
+	for (int i = 0; i < x; i++) {
+		for (int j = 0; j < y; j++) {
+			N += statField[i][j];
+		}
+	}
+	double norm = 1 / (N/(x*y));
+	for (int i = 0; i < x; i++) {
+		for (int j = 0; j < y; j++) {
+			statField[i][j] *= norm ;
+		}
+	}
+
+	//std::cout << "N: " << N << "\n";
+	//std::cout << "norm: " << norm << "\n";
 }
 
 /*Prints the static field DEBUG PURPOSES*/
@@ -123,9 +144,7 @@ void floorPed::writeStatField2File(std::string fileName) {
 		}
 		file << "\n";
 	}
-	
 	file.close();
-
 }
 
 /*Adds obstacles to the edges of the floor to create a wall and stop
@@ -316,7 +335,7 @@ void floorPed::singleRunAllTogether() {
 	for (int p = 0; p < pedVec.size(); p++) {
 		
 		if (pedVec[p].escape == 1) {
-		std::cout << "entered escape if" << "\n";
+			//std::cout << "entered escape if" << "\n";
 			occupied[pedVec[p].position[0]][pedVec[p].position[1]] = 0;
 		}
 		else {
@@ -344,17 +363,12 @@ void floorPed::singleRunDiag() {
 		if (pedVec[p].escape == 1) {
 			occupied[pedVec[p].position[0]][pedVec[p].position[1]] = 0;
 			resetSavedPed(p);
-			//std::cout << "Pedestrian is at the door and it is saved!" << pedVec[p].position[0] << ", " << pedVec[p].position[1]<< "\n";
-			//std::cout << "It should be 1: " << pedVec[p].escape << "\n";
 		}
 		else {
 			occupied[pedVec[p].position[0]][pedVec[p].position[1]] = 0;
 			pedVec[p].position = pedVec[p].desiredMove;
 			isPedSafe(p);
 			occupied[pedVec[p].position[0]][pedVec[p].position[1]] = 1;
-			//std::cout << "ped number " << p << "\n";
-			//pedVec[p].returnProbMat();
-			//std::cout << "\n";
 		}
 		
 	}
@@ -393,7 +407,6 @@ and the "winner" will*/
 void floorPed::findNResolveConflicts(int p) {
 	for (int j = 0; j < pedVec.size(); j++) {
 		if (j != p && pedVec[p].escape == 0 && pedVec[j].escape == 0){
-			//std::cout << "conflict found between" << j << " and " << p << "\n";
 			if (pedVec[p].desiredMove == pedVec[j].desiredMove) {
 				if (pedVec[p].probMax > pedVec[j].probMax) {
 					pedVec[j].desiredMove = pedVec[j].position;
@@ -472,7 +485,6 @@ void floorPed::writeMovements2File(std::string fileName) {
 		file << "\n";
 	}
 	file.close();
-	std::cout <<"ped: " <<  ped << "\n";
 }
 
 int floorPed::numberOfPed() {
