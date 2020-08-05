@@ -32,7 +32,7 @@ Builds walls around the room and finally,
 adds exits as doors*/
 void floorPed::initMat() {
 	statFieldInit();
-	statFieldNorm();
+	//statFieldNorm();
 	for (int i = 0; i < x; i++) {
 		for (int j = 0; j < y; j++) {
 			obstacle[i][j] = 1;
@@ -101,24 +101,42 @@ void floorPed::statFieldInit() {
 /*Sums all values of the static field in N. 
 All values of the static field are divided by N (and x*y)*/
 void floorPed::statFieldNorm() {
-	double N = 0;
+	double max = 0;
 	for (int i = 0; i < x; i++) {
 		for (int j = 0; j < y; j++) {
-			N += statField[i][j];
+			if (statField[i][j] >= max) {
+				max = statField[i][j];
+			}
 		}
 	}
-	double norm = 1 / (N/(x*y));
+	double norm = 1 / max;
 	for (int i = 0; i < x; i++) {
 		for (int j = 0; j < y; j++) {
 			statField[i][j] *= norm ;
 		}
 	}
-
-	//std::cout << "N: " << N << "\n";
-	//std::cout << "norm: " << norm << "\n";
 }
 
-/*Prints the static field DEBUG PURPOSES*/
+void floorPed::dynFieldNorm() {
+	double max = 0;
+	for (int i = 0; i < x; i++) {
+		for (int j = 0; j < y; j++) {
+			if (dynField[i][j] >= max) {
+				max = dynField[i][j];
+			}
+		}
+	}
+
+	double norm = 1 / max;
+
+	for (int i = 0; i < x; i++) {
+		for (int j = 0; j < y; j++) {
+			dynField[i][j] *= norm;
+		}
+	}
+}
+
+/*Prints the static field on the console*/
 void floorPed::printStatField() {
 	for (int i = 0; i < x; i++) {
 		for (int j = 0; j < y; j++) {
@@ -147,6 +165,24 @@ void floorPed::writeStatField2File(std::string fileName) {
 	file.close();
 }
 
+void floorPed::writeDynField2File(std::string fileName) {
+
+	std::ofstream file;
+	file.open(fileName + ".txt");
+
+	for (int i = 0; i < x; i++) {
+		for (int j = 0; j < y; j++) {
+			if (j == y - 1) {
+				file << dynField[i][j];
+			}
+			else {
+				file << dynField[i][j] << ":";
+			}
+		}
+		file << "\n";
+	}
+}
+
 /*Adds obstacles to the edges of the floor to create a wall and stop
 the pedestrians to go out*/
 void floorPed::buildWall() {
@@ -162,34 +198,36 @@ void floorPed::buildWall() {
 	}
 }
 
-/*Not finished, will calculate and update the dynamic field. It will regulate only diffusion and decay.*/
-/*void floorPed::dynamicDecay() {
+/*Ipdates the dynamic field. With the use of a random number, it will decide if the dynamic field cell will decay.
+If it decays, it will also decide if it diffuses or not*/
+void floorPed::dynamicDecay() {
+	double temp;
+	double difI;
+	double difJ;
 	for (int i = 1; i < x-1; i++) {
 		for (int j = 1; j < y-1; j++) {
-
-			if (dynField[i][j] < 0) {
-				dynField[i][j] = 0;
-			}
-
-			double temp = (rand()%10)*(0.1);
-
-			if (temp <= beta) {
-				dynField[i][j] -= 1;
-				if (temp <= alpha + beta) {
-					double difI = (rand() % 3) - 1;
-					double difJ = (rand() % 3) -1;
-					dynField[i][j] -= 1;
-					dynField[difI][difJ] += 1;
-				}
-			}
+			if (dynField[i][j] != 0) {
+				
+				temp = (rand() % 11)*(0.1);
 			
-			if (dynField[i][j] < 0) {
-				dynField[i][j] = 0;
+				if (temp < beta) {
+					dynField[i][j] -= 1;
+					temp = (rand() % 11)*(0.1);
+					if (temp < alpha){
+						difI = (rand() % 3)-1;
+						difJ = (rand() % 3)-1;
+						dynField[i + difI][j + difJ] += 1;
+					}
+				}
+
+				if (dynField[i][j] < 0) {
+					dynField[i][j] = 0;
+				}
 			}
 		}
 	}
 }
-*/
+
 
 /*Adds a pedestrian to the floor if the cell isnt occupied or has an obstacle*/
 bool floorPed::addPed(pedestrian & p1) {
@@ -212,7 +250,7 @@ void floorPed::isPedSafe(int p) {
 	}
 }
 
-/*Calculates the probability matrix of all pedestrians on the floor*/
+/*Calculates the probability matrix of a given pedestrian. Ignores diagonals*/
 void floorPed::calcProbMat(int p) {
 	int i = pedVec[p].position[0];
 	int j = pedVec[p].position[1];
@@ -271,13 +309,6 @@ void floorPed::calcProbMatDiag(int p) {
 	pedVec[p].probMat[2][0] = norm * bl;
 	pedVec[p].probMat[2][2] = norm * br;
 
-	/*for (int x = 0; x < 3; x++) {
-		for (int y = 0; y < 3; y++) {
-			std::cout << pedVec[p].probMat[x][y] << ":";
-		}
-		std::cout << "\n";
-	}
-	std::cout << "\n";*/
 }
 
 
@@ -372,6 +403,37 @@ void floorPed::singleRunDiag() {
 		}
 		
 	}
+}
+
+void floorPed::singleRunDynField() {
+
+	for (int p = 0; p < pedVec.size(); p++) {
+		isPedSafe(p);
+	}
+
+	pedDecideDiag();
+
+	for (int p = 0; p < pedVec.size(); p++) {
+		findNResolveConflicts(p);
+	}
+
+	for (int p = 0; p < pedVec.size(); p++) {
+		if (pedVec[p].escape == 1) {
+			occupied[pedVec[p].position[0]][pedVec[p].position[1]] = 0;
+			resetSavedPed(p);
+		}
+		else {
+			occupied[pedVec[p].position[0]][pedVec[p].position[1]] = 0;
+			pedVec[p].position = pedVec[p].desiredMove;
+			occupied[pedVec[p].position[0]][pedVec[p].position[1]] = 1;
+			dynField[pedVec[p].position[0]][pedVec[p].position[1]] += 1;
+		}
+		
+	}
+
+	dynamicDecay();
+	//dynFieldNorm();
+
 }
 
 /*All pedestrians calculate their probability matrix, and from there they will choose which cell they will move to.*/
@@ -489,6 +551,15 @@ void floorPed::writeMovements2File(std::string fileName) {
 
 int floorPed::numberOfPed() {
 	return pedVec.size();
+}
+
+void floorPed::printDynField() {
+	for (int i = 0; i < x; i++) {
+		for (int j = 0; j < y; j++) {
+			std::cout << dynField[i][j] << ":";
+		}
+		std::cout << "\n";
+	}
 }
 
 int floorPed::numberOfSavedPed() {
