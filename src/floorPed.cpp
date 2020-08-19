@@ -47,6 +47,19 @@ void floorPed::initMat() {
 	}
 }
 
+void floorPed::ranPed(int n) {
+
+	if (n >= (x - 2)*(y - 2)) {
+		std::cout << "Thats too many" << "\n";
+	}
+	for (int i = 0; i < n; i++) {
+		pedestrian temp = pedestrian(1 + rand() % (x - 2), 1 + rand() % (y - 2));
+		if (addPed(temp) == 0) {
+			i--;
+		}
+	}
+}
+
 
 /*Calculates the furthest away cell from every door*/
 void floorPed::calcDL() {
@@ -424,15 +437,15 @@ void floorPed::singleRunDynField() {
 		}
 		else {
 			occupied[pedVec[p].position[0]][pedVec[p].position[1]] = 0;
+			if (pedVec[p].position != pedVec[p].desiredMove) {
+				dynField[pedVec[p].position[0]][pedVec[p].position[1]] += 1;
+			}
 			pedVec[p].position = pedVec[p].desiredMove;
 			occupied[pedVec[p].position[0]][pedVec[p].position[1]] = 1;
-			dynField[pedVec[p].position[0]][pedVec[p].position[1]] += 1;
 		}
-		
 	}
 
 	dynamicDecay();
-	//dynFieldNorm();
 
 }
 
@@ -488,6 +501,7 @@ void floorPed::findNResolveConflicts(int p) {
 		}
 	}	
 }
+
 
 void floorPed::clearPed(int p) {
 	for (int i = 0; i < p; i++)

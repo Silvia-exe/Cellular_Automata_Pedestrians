@@ -43,7 +43,7 @@ class floorPed {
 		
 		startMat();
 		initMat();
-		buildWall();
+		//buildWall();
 	}
 
 private:
@@ -77,6 +77,7 @@ private:
 public:
 	
 	bool addPed(pedestrian & p1);
+	void ranPed(int n);
 
 	void singleRun();
 	void singleRunAllTogether();
