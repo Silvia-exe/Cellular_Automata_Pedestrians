@@ -50,7 +50,6 @@ private:
 
 	double expFunction(int i, int j);
 	
-	void resetOccupied();
 	void initMat();
 	void statFieldInit();
 	void startMat();
@@ -73,11 +72,17 @@ private:
 	void dynamicDecay();
 	void statFieldNorm();
 	void dynFieldNorm();
+
+	void resetDynField();
+	void resetOccupied();
+	
 	
 public:
 	
 	bool addPed(pedestrian & p1);
 	void ranPed(int n);
+	void densityPed(double density);
+	void erasePed();
 
 	void singleRun();
 	void singleRunAllTogether();
@@ -95,6 +100,16 @@ public:
 	void writeMovements2File(std::string fileName);
 	void writeStatField2File(std::string fileName);
 	void writeDynField2File(std::string fileName);
+	void writeData2File(std::string fileName);
+
+	void changeSize(int _x, int _y);
+	void changeKD(double kD);
+	void changeAlpha(double _alpha);
+	void changeBeta(double beta);
+	
+	void resetFloor(int p);
+
+	void resetFloor(double rho);
 	
 
 	floorPed(int x_, int y_, double kS_, double kD_, double alpha_, double beta_, std::vector<std::vector<int>> door_) {

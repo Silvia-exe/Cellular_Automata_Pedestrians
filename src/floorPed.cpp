@@ -48,7 +48,7 @@ void floorPed::initMat() {
 }
 
 void floorPed::ranPed(int n) {
-
+	
 	if (n >= (x - 2)*(y - 2)) {
 		std::cout << "Thats too many" << "\n";
 	}
@@ -58,6 +58,22 @@ void floorPed::ranPed(int n) {
 			i--;
 		}
 	}
+}
+
+void floorPed::densityPed(double density) {
+	int numberPed = (x - 2)*(y - 2) * density;
+
+	if (density >= 1) {
+		std::cout << "Density is too high" << "\n";
+	}
+
+	for (int i = 0; i < numberPed; i++) {
+		pedestrian temp = pedestrian(1 + rand() % (x - 2), 1 + rand() % (y - 2));
+		if (addPed(temp) == 0) {
+			i--;
+		}
+	}
+
 }
 
 
@@ -196,6 +212,26 @@ void floorPed::writeDynField2File(std::string fileName) {
 	}
 }
 
+void floorPed::writeData2File(std::string fileName) {
+
+	std::ofstream file;
+	file.open(fileName+ "/floorData.txt");
+	file << "x:" << x << "\n";
+	file << "y:" << y << "\n";
+	file << "kS:" << kS << "\n";
+	file << "kD:" << kD << "\n";
+	file << "alpha:" << alpha << "\n";
+	file << "beta:" << beta << "\n";
+	file << "numbPed:" << pedVec.size() << "\n";
+	file << "door_coordinates:";
+
+	for (int i = 0; i < door.size(); i++) {
+		file << door[i][0] << "," << door[i][1] << ":";
+	}
+	file << "\n";
+	file.close();
+}
+
 /*Adds obstacles to the edges of the floor to create a wall and stop
 the pedestrians to go out*/
 void floorPed::buildWall() {
@@ -241,6 +277,34 @@ void floorPed::dynamicDecay() {
 	}
 }
 
+void floorPed::changeSize(int _x, int _y) {
+	x = _x;
+	y = _y;
+}
+
+void floorPed::changeKD(double _kD) {
+	kD = _kD;
+}
+
+void floorPed::changeAlpha(double _alpha) {
+	alpha = _alpha;
+}
+
+void floorPed::changeBeta(double _beta) {
+	beta = _beta;
+}
+
+void floorPed::resetDynField() {
+	
+	for (int i = 0; i < x; i++) {
+		for(int j = 0; j < y; j++){
+		
+			dynField[i][j] = 0;
+		
+		}
+	}
+}
+
 
 /*Adds a pedestrian to the floor if the cell isnt occupied or has an obstacle*/
 bool floorPed::addPed(pedestrian & p1) {
@@ -252,6 +316,10 @@ bool floorPed::addPed(pedestrian & p1) {
 		occupied[p1.position[0]][p1.position[1]] = 1;
 		return 1;
 	}
+}
+
+void floorPed::erasePed() {
+	pedVec.clear();
 }
 
 /*Checks if the pedestrian is standing at the door or not and "saves" it*/
@@ -516,6 +584,20 @@ void floorPed::resetOccupied() {
 			occupied[i][j] = 0;
 		}
 	}
+}
+
+void floorPed::resetFloor(int p) {
+	erasePed();
+	resetOccupied();
+	resetDynField();
+	ranPed(p);
+}
+
+void floorPed::resetFloor(double rho) {
+	erasePed();
+	resetOccupied();
+	resetDynField();
+	densityPed(rho);
 }
 
 void floorPed::printMovements() {
