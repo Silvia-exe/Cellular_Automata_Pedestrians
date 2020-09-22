@@ -47,6 +47,7 @@ void runDiagNRuns(int p, int n, int x, int y, std::vector<std::vector<int>> door
 		f1.writeMovements2File(path + "/finalPosition");
 	}
 }
+
 void runDiagNRuns(floorPed f1, int n, std::string path, bool writeIterations){
 	
 	f1.writeStatField2File(path+"/staticField");
@@ -102,6 +103,7 @@ void runDiagAllSaved(int p, int n, int x, int y, std::vector<std::vector<int>> d
 		std::cout << it << "\n";
 	}
 }
+
 void runDiagAllSaved(floorPed f1, int n,std::string path, bool writeIterations){
 	
 	int it = 0;
@@ -113,7 +115,7 @@ void runDiagAllSaved(floorPed f1, int n,std::string path, bool writeIterations){
 
 
 	if (writeIterations == 1) {
-		while (f1.numberOfSavedPed() != f1.numberOfPed()) {
+		while (f1.numberOfSavedPed() != f1.numberOfPed() && it <= n) {
 			f1.singleRunDynField();
 			it++;
 			f1.writeMovements2File(itFolder + "/iteration" + std::to_string(it));
@@ -121,7 +123,7 @@ void runDiagAllSaved(floorPed f1, int n,std::string path, bool writeIterations){
 		f1.writeMovements2File(path + "/finalPosition");
 	}
 	else {
-		while (f1.numberOfSavedPed() != f1.numberOfPed()) {
+		while (f1.numberOfSavedPed() != f1.numberOfPed() && it <= n) {
 			f1.singleRunDynField();
 			it++;
 		}
@@ -157,6 +159,7 @@ void runDiagConstPed(int p, int n, int x, int y, std::vector<std::vector<int>> d
 
 	file.close();
 }
+
 void runDiagConstPed(floorPed f1, int n, std::string fileName, std::string path) {
 	srand(time(0));
 	std::vector<int> dataIterations;
@@ -208,11 +211,16 @@ void runDiagVarPed(int p, int x, int y, std::vector<std::vector<int>> doors, std
 
 	file.close();
 }
+
 void runDiagVarPed(floorPed f1, int p, std::string fileName, std::string path) {
 	srand(time(0));
 	std::vector<int> dataIterations;
 	std::ofstream file;
 	int it = 0;
+
+	file.open(path + "/" + fileName + ".txt");
+
+	file << "numbPed" << "iterations";
 	for (int i = 0; i <= p; i++) {
 		f1.resetFloor(i);
 		it = 0;
@@ -223,14 +231,13 @@ void runDiagVarPed(floorPed f1, int p, std::string fileName, std::string path) {
 		dataIterations.push_back(it);
 	}
 
-	file.open(path + "/" + fileName + ".txt");
-
 	for (int i = 0; i < dataIterations.size(); i++) {
-		file << i << "," << dataIterations[i] << "\n";
+		file << i << ":" << dataIterations[i] << "\n";
 	}
 
 	file.close();
 }
+
 void runDiagVarPedRho(floorPed f1, double rho, std::string fileName, std::string path) {
 
 	std::ofstream file;
@@ -245,8 +252,8 @@ void runDiagVarPedRho(floorPed f1, double rho, std::string fileName, std::string
 	for (double r = 0.5; r <= rhoInt; r +=0.5) {
 		
 		it = 0;
-		f1.resetFloor(r / 10);
-		file << r / 10 << ":";
+		f1.resetFloor(r);
+		file << r << ":";
 
 		while (f1.numberOfSavedPed() != f1.numberOfPed()) {
 			
@@ -295,8 +302,8 @@ void runDiagVarSize(int Xmax, int Ymax, int Xini, int Yini, int p, double kD, do
 }
 
 void runDiagVarKD(floorPed f1, int n, double kD, std::string fileName, std::string path) {
+	//std::cout << "Entered KDVar" << std::endl;
 	int it = 0;
-	int kDInt = kD * 10;
 	int numPed = f1.numberOfPed();
 	
 	std::ofstream file;
@@ -304,11 +311,12 @@ void runDiagVarKD(floorPed f1, int n, double kD, std::string fileName, std::stri
 	file.open(path + "/" +fileName + ".txt");
 	file << "kD:iterations\n";
 
-	for (double k = 0; k <= kDInt; k++) {
-		f1.changeKD(k / 10);
+	for (double k = 0.0; k <= kD; k+=0.5) {
+		f1.changeKD(k);
 		f1.resetFloor(numPed);
+		it = 0;
 
-		file << k / 10 << ":";
+		file << k << ":";
 
 		while (f1.numberOfPed() != f1.numberOfSavedPed() && it <= n) {
 			f1.singleRunDynField();
@@ -322,18 +330,19 @@ void runDiagVarKD(floorPed f1, int n, double kD, std::string fileName, std::stri
 void runDiagVarAlpha(floorPed f1, int n, double alpha, std::string fileName, std::string path) {
 
 	int it = 0;
-	int alphaInt = alpha * 10;
+	int alphaInt = alpha;
 	int numbPed = f1.numberOfPed();
 
 	std::ofstream file;
 	file.open(path + "/" + fileName + ".txt");
 	file << "alpha:iterations\n";
 	
-	for (double a = 0; a <= alphaInt; a = a+0.5) {
-		f1.changeAlpha(a / 10);
+	for (double a = 0; a <= alphaInt; a += 0.5) {
+		f1.changeAlpha(a);
 		f1.resetFloor(numbPed);
+		it = 0;
 
-		file << a / 10 << ":";
+		file << a << ":";
 
 		while (f1.numberOfPed() != f1.numberOfSavedPed() && it <= n) {
 			f1.singleRunDynField();
@@ -353,11 +362,11 @@ void runDiagVarBeta(floorPed f1, int n, double beta, std::string fileName, std::
 	file.open(path + "/" + fileName + ".txt");
 	file << "beta:iterations\n";
 
-	for (double b = 0; b <= betaInt; b= b+0.5) {
-		f1.changeBeta(b / 10);
+	for (double b = 0; b <= betaInt; b+=0.5) {
+		f1.changeBeta(b);
 		f1.resetFloor(numbPed);
 
-		file << b / 10 << ":";
+		file << b << ":";
 
 		while (f1.numberOfPed() != f1.numberOfSavedPed() && it <= n) {
 			f1.singleRunDynField();

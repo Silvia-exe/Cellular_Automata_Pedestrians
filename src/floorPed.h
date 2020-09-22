@@ -4,6 +4,7 @@
 #include <fstream>
 #include <string>
 #include <algorithm>
+#include <exception>
 #include "pedestrian.h"
 
 
@@ -100,12 +101,15 @@ public:
 	void writeMovements2File(std::string fileName);
 	void writeStatField2File(std::string fileName);
 	void writeDynField2File(std::string fileName);
-	void writeData2File(std::string fileName);
+	void writeData2File(std::string path);
 
 	void changeSize(int _x, int _y);
-	void changeKD(double kD);
+	void changeKD(double _kD);
+	void changeKS(double _kS);
+	void printKs();
+
 	void changeAlpha(double _alpha);
-	void changeBeta(double beta);
+	void changeBeta(double _beta);
 	
 	void resetFloor(int p);
 

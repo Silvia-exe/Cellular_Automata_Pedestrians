@@ -212,10 +212,10 @@ void floorPed::writeDynField2File(std::string fileName) {
 	}
 }
 
-void floorPed::writeData2File(std::string fileName) {
+void floorPed::writeData2File(std::string path) {
 
 	std::ofstream file;
-	file.open(fileName+ "/floorData.txt");
+	file.open(path + "/floorData.txt");
 	file << "x:" << x << "\n";
 	file << "y:" << y << "\n";
 	file << "kS:" << kS << "\n";
@@ -286,6 +286,14 @@ void floorPed::changeKD(double _kD) {
 	kD = _kD;
 }
 
+void floorPed::changeKS(double _kS) {
+	kS = _kS;
+}
+
+void floorPed::printKs() {
+	std::cout << kS << "\n";
+}
+
 void floorPed::changeAlpha(double _alpha) {
 	alpha = _alpha;
 }
@@ -325,7 +333,7 @@ void floorPed::erasePed() {
 /*Checks if the pedestrian is standing at the door or not and "saves" it*/
 void floorPed::isPedSafe(int p) {
 	for (int i = 0; i < door.size(); i++) {
-		if (pedVec[p].position[0] == door[i][0] && pedVec[p].position[1] == door[i][1]) {
+		if (pedVec[p].position == door[i]) {
 			pedVec[p].escape = 1;
 		}
 	}
@@ -395,7 +403,16 @@ void floorPed::calcProbMatDiag(int p) {
 
 /*Exponential function that is the basis on calculating the probability matrix*/
 double floorPed::expFunction(int i, int j) {
-	return exp(kD * dynField[i][j])*exp(kS*statField[i][j])*(1 - occupied[i][j])*obstacle[i][j];
+	try
+	{
+		return exp(kD * dynField[i][j])*exp(kS*statField[i][j])*(1 - occupied[i][j])*obstacle[i][j];
+	}
+	catch (char *e)
+	{
+		std::cout << exp(kD * dynField[i][j])*exp(kS*statField[i][j])*(1 - occupied[i][j])*obstacle[i][j];
+		std::cout << i << ", " << j;
+	}
+
 }
 
 
@@ -549,7 +566,7 @@ void floorPed::pedDecideDiag() {
 and the "winner" will*/
 void floorPed::findNResolveConflicts(int p) {
 	for (int j = 0; j < pedVec.size(); j++) {
-		if (j != p && pedVec[p].escape == 0 && pedVec[j].escape == 0){
+		if (j != p && pedVec[p].escape == 0 && pedVec[j].escape == 0) {
 			if (pedVec[p].desiredMove == pedVec[j].desiredMove) {
 				if (pedVec[p].probMax > pedVec[j].probMax) {
 					pedVec[j].desiredMove = pedVec[j].position;
@@ -567,8 +584,40 @@ void floorPed::findNResolveConflicts(int p) {
 				}
 			}
 		}
-	}	
+	}
 }
+
+/*
+void floorPed::findNResolveConflicts(int p) {
+	bool maxP;
+	bool equal;
+	int prob;
+	for (int j = 0; j < pedVec.size(); j++) {
+		if (j != p && pedVec[p].escape + pedVec[j].escape == 0) {
+			if (pedVec[p].desiredMove == pedVec[j].desiredMove) {
+				maxP = pedVec[p].probMax >= pedVec[j].probMax;
+				equal = pedVec[p].probMax == pedVec[j].probMax;
+				prob = (int)maxP + (int)equal;
+				switch (prob) {
+				case 0:
+					pedVec[j].position = pedVec[j].desiredMove;
+					break;
+				case 1:
+					pedVec[p].position = pedVec[p].desiredMove;
+					
+				case 2:
+					if (rand() % 2 == 0) {
+						pedVec[p].position = pedVec[p].desiredMove;
+					}
+					else {
+						pedVec[j].position = pedVec[j].desiredMove;
+					}
+					
+				}
+			}
+		}
+	}
+}*/
 
 
 void floorPed::clearPed(int p) {
