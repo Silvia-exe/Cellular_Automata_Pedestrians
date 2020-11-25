@@ -333,7 +333,7 @@ void floorPed::erasePed() {
 /*Checks if the pedestrian is standing at the door or not and "saves" it*/
 void floorPed::isPedSafe(int p) {
 	for (int i = 0; i < door.size(); i++) {
-		if (pedVec[p].position == door[i]) {
+		if (pedVec[p].position[0] == door[i][0] && pedVec[p].position[1] == door[i][1]) {
 			pedVec[p].escape = 1;
 		}
 	}
@@ -403,15 +403,8 @@ void floorPed::calcProbMatDiag(int p) {
 
 /*Exponential function that is the basis on calculating the probability matrix*/
 double floorPed::expFunction(int i, int j) {
-	try
-	{
-		return exp(kD * dynField[i][j])*exp(kS*statField[i][j])*(1 - occupied[i][j])*obstacle[i][j];
-	}
-	catch (char *e)
-	{
-		std::cout << exp(kD * dynField[i][j])*exp(kS*statField[i][j])*(1 - occupied[i][j])*obstacle[i][j];
-		std::cout << i << ", " << j;
-	}
+	
+	return exp(kD * dynField[i][j])*exp(kS*statField[i][j])*(1 - occupied[i][j])*obstacle[i][j];
 
 }
 

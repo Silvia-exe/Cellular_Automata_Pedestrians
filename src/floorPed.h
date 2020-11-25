@@ -4,7 +4,6 @@
 #include <fstream>
 #include <string>
 #include <algorithm>
-#include <exception>
 #include "pedestrian.h"
 
 
