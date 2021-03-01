@@ -13,6 +13,7 @@ void runDiagNRuns(floorPed f1, int n, std::string path, bool writeIterations);
 
 void runDiagAllSaved(int p, int n, int x, int y, std::vector<std::vector<int>> doors, std::string path, bool writeIterations);
 void runDiagAllSaved(floorPed f1, int n, std::string path, bool writeIterations);
+void runAdjAllSaved(floorPed f1, int n, std::string path, bool writeIterations);
 
 void runDiagConstPed(int p, int n, int x, int y, std::vector<std::vector<int>> doors, std::string fileName);
 void runDiagConstPed(floorPed f1, int n, std::string fileName, std::string path);

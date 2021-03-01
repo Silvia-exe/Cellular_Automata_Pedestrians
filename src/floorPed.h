@@ -87,6 +87,7 @@ public:
 	void singleRun();
 	void singleRunAllTogether();
 	void singleRunDiag();
+	void singleRunAdjDynField();
 	void singleRunSave();
 	void singleRunDynField();
 

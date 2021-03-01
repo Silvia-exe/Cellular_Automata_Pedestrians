@@ -496,6 +496,35 @@ void floorPed::singleRunDiag() {
 	}
 }
 
+void floorPed::singleRunAdjDynField() {
+	for (int p = 0; p < pedVec.size(); p++) {
+		isPedSafe(p);
+	}
+
+	pedDecide();
+
+	for (int p = 0; p < pedVec.size(); p++) {
+		findNResolveConflicts(p);
+	}
+
+	for (int p = 0; p < pedVec.size(); p++) {
+		if (pedVec[p].escape == 1) {
+			occupied[pedVec[p].position[0]][pedVec[p].position[1]] = 0;
+			resetSavedPed(p);
+		}
+		else {
+			occupied[pedVec[p].position[0]][pedVec[p].position[1]] = 0;
+			if (pedVec[p].position != pedVec[p].desiredMove) {
+				dynField[pedVec[p].position[0]][pedVec[p].position[1]] += 1;
+			}
+			pedVec[p].position = pedVec[p].desiredMove;
+			occupied[pedVec[p].position[0]][pedVec[p].position[1]] = 1;
+		}
+	}
+
+	dynamicDecay();
+}
+
 void floorPed::singleRunDynField() {
 
 	for (int p = 0; p < pedVec.size(); p++) {

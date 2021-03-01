@@ -38,7 +38,9 @@ void runDiagNRuns(int p, int n, int x, int y, std::vector<std::vector<int>> door
 			f1.singleRunDiag();
 			f1.writeMovements2File(itFolder + "/iteration" + std::to_string(i));
 		}
+
 		f1.writeMovements2File(path + "/finalPosition");
+		
 	}
 	else {
 		for (int i = 0; i < n; i++) {
@@ -57,14 +59,17 @@ void runDiagNRuns(floorPed f1, int n, std::string path, bool writeIterations){
 
 	if (writeIterations == 1) {
 		for (int i = 0; i < n; i++) {
-			f1.singleRunDiag();
+			f1.singleRunDynField();
 			f1.writeMovements2File(itFolder +"/iteration" + std::to_string(i));
+			f1.writeDynField2File(path + "/dynField"+ std::to_string(i));
+			
 		}
+		f1.writeDynField2File(path + "/dynFieldFinal");
 		f1.writeMovements2File(path+"/finalPosition");
 	}
 	else {
 		for (int i = 0; i < n; i++) {
-			f1.singleRunDiag();
+			f1.singleRunDynField();
 		}
 		f1.writeMovements2File(path+"/finalPosition");
 	}
@@ -128,6 +133,36 @@ void runDiagAllSaved(floorPed f1, int n,std::string path, bool writeIterations){
 			it++;
 		}
 		f1.writeMovements2File(path + "/finalPosition");
+		f1.writeDynField2File(path + "/dynamicField");
+		std::cout << it << "\n";
+	}
+}
+
+void runAdjAllSaved(floorPed f1, int n, std::string path, bool writeIterations) {
+
+	int it = 0;
+
+	f1.writeStatField2File(path + "/staticField");
+	f1.writeMovements2File(path + "/initialPosition");
+	std::string itFolder = path + "/iterations";
+	_mkdir(itFolder.c_str());
+
+
+	if (writeIterations == 1) {
+		while (f1.numberOfSavedPed() != f1.numberOfPed() && it <= n) {
+			f1.singleRunAdjDynField();
+			it++;
+			f1.writeMovements2File(itFolder + "/iteration" + std::to_string(it));
+		}
+		f1.writeMovements2File(path + "/finalPosition");
+	}
+	else {
+		while (f1.numberOfSavedPed() != f1.numberOfPed() && it <= n) {
+			f1.singleRunAdjDynField();
+			it++;
+		}
+		f1.writeMovements2File(path + "/finalPosition");
+		f1.writeDynField2File(path + "/dynamicField");
 		std::cout << it << "\n";
 	}
 }
