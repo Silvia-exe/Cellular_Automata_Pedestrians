@@ -49,6 +49,7 @@ class floorPed {
 private:
 
 	double expFunction(int i, int j);
+	double expFunction(int i, int j, int p);
 	
 	void initMat();
 	void statFieldInit();
@@ -87,9 +88,9 @@ public:
 	void singleRun();
 	void singleRunAllTogether();
 	void singleRunDiag();
-	void singleRunAdjDynField();
+	void singleRunDynFieldVonNe();
 	void singleRunSave();
-	void singleRunDynField();
+	void singleRunDynFieldMoore();
 
 	void printMovements();
 	void printStatField();

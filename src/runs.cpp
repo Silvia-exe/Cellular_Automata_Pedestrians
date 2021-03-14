@@ -59,7 +59,7 @@ void runDiagNRuns(floorPed f1, int n, std::string path, bool writeIterations){
 
 	if (writeIterations == 1) {
 		for (int i = 0; i < n; i++) {
-			f1.singleRunDynField();
+			f1.singleRunDynFieldMoore();
 			f1.writeMovements2File(itFolder +"/iteration" + std::to_string(i));
 			f1.writeDynField2File(path + "/dynField"+ std::to_string(i));
 			
@@ -69,18 +69,18 @@ void runDiagNRuns(floorPed f1, int n, std::string path, bool writeIterations){
 	}
 	else {
 		for (int i = 0; i < n; i++) {
-			f1.singleRunDynField();
+			f1.singleRunDynFieldMoore();
 		}
 		f1.writeMovements2File(path+"/finalPosition");
 	}
 }
 
 
-/*Runs iterations of the singleRunDynField function with a floor with size x*y until all p pedestrians are saved. 
+/*Runs iterations of the singleRunDynFieldMoore function with a floor with size x*y until all p pedestrians are saved. 
 An upper limit n can be given to control the maximum number of iterations.
 writeIterations should be 1 if you want the positions at every iteration to be written in a text file
 Regardless, the final position of the pedestrians will be written in a text file with name "finalPosition"*/
-void runDiagAllSaved(int p, int n, int x, int y, std::vector<std::vector<int>> doors, std::string path, bool writeIterations) {
+void runDiagAllSavedMoore(int p, int n, int x, int y, std::vector<std::vector<int>> doors, std::string path, bool writeIterations) {
 	floorPed f1 = floorPed(x, y, 0, 0, 0, 0, doors);
 
 	int it = 0;
@@ -93,7 +93,7 @@ void runDiagAllSaved(int p, int n, int x, int y, std::vector<std::vector<int>> d
 
 	if (writeIterations == 1) {
 		while (f1.numberOfSavedPed() != f1.numberOfPed()) {
-			f1.singleRunDynField();
+			f1.singleRunDynFieldMoore();
 			it++;
 			f1.writeMovements2File(itFolder + "/iteration" + std::to_string(it));
 		}
@@ -101,7 +101,7 @@ void runDiagAllSaved(int p, int n, int x, int y, std::vector<std::vector<int>> d
 	}
 	else {
 		while (f1.numberOfSavedPed() != f1.numberOfPed()) {
-			f1.singleRunDynField();
+			f1.singleRunDynFieldMoore();
 			it++;
 		}
 		f1.writeMovements2File(path + "/finalPosition");
@@ -109,7 +109,7 @@ void runDiagAllSaved(int p, int n, int x, int y, std::vector<std::vector<int>> d
 	}
 }
 
-void runDiagAllSaved(floorPed f1, int n,std::string path, bool writeIterations){
+void runDiagAllSavedMoore(floorPed f1, int n,std::string path, bool writeIterations){
 	
 	int it = 0;
 
@@ -121,7 +121,7 @@ void runDiagAllSaved(floorPed f1, int n,std::string path, bool writeIterations){
 
 	if (writeIterations == 1) {
 		while (f1.numberOfSavedPed() != f1.numberOfPed() && it <= n) {
-			f1.singleRunDynField();
+			f1.singleRunDynFieldMoore();
 			it++;
 			f1.writeMovements2File(itFolder + "/iteration" + std::to_string(it));
 		}
@@ -129,7 +129,7 @@ void runDiagAllSaved(floorPed f1, int n,std::string path, bool writeIterations){
 	}
 	else {
 		while (f1.numberOfSavedPed() != f1.numberOfPed() && it <= n) {
-			f1.singleRunDynField();
+			f1.singleRunDynFieldMoore();
 			it++;
 		}
 		f1.writeMovements2File(path + "/finalPosition");
@@ -138,7 +138,7 @@ void runDiagAllSaved(floorPed f1, int n,std::string path, bool writeIterations){
 	}
 }
 
-void runAdjAllSaved(floorPed f1, int n, std::string path, bool writeIterations) {
+void runAllSavedVonNe(floorPed f1, int n, std::string path, bool writeIterations) {
 
 	int it = 0;
 
@@ -150,7 +150,7 @@ void runAdjAllSaved(floorPed f1, int n, std::string path, bool writeIterations) 
 
 	if (writeIterations == 1) {
 		while (f1.numberOfSavedPed() != f1.numberOfPed() && it <= n) {
-			f1.singleRunAdjDynField();
+			f1.singleRunDynFieldVonNe();
 			it++;
 			f1.writeMovements2File(itFolder + "/iteration" + std::to_string(it));
 		}
@@ -158,7 +158,7 @@ void runAdjAllSaved(floorPed f1, int n, std::string path, bool writeIterations) 
 	}
 	else {
 		while (f1.numberOfSavedPed() != f1.numberOfPed() && it <= n) {
-			f1.singleRunAdjDynField();
+			f1.singleRunDynFieldVonNe();
 			it++;
 		}
 		f1.writeMovements2File(path + "/finalPosition");
@@ -301,7 +301,7 @@ void runDiagVarPedRho(floorPed f1, double rho, std::string fileName, std::string
 	file.close();
 }
 
-/*Runs iterations of singleRunDynField varying the size from Xini and Yini to Xmax and Ymax until all pedestrians are saved
+/*Runs iterations of singleRunDynFieldMoore varying the size from Xini and Yini to Xmax and Ymax until all pedestrians are saved
 Size in x and y are noted now, afterwards the number of iterations that took for all pedestrians to escape is noted in a text file with name fileName*/
 void runDiagVarSize(int Xmax, int Ymax, int Xini, int Yini, int p, double kD, double kS, double alpha, double beta, int maxIteration, std::string fileName, std::string path) {
 
@@ -326,7 +326,7 @@ void runDiagVarSize(int Xmax, int Ymax, int Xini, int Yini, int p, double kD, do
 			floorPed f1 = floorPed(x, y, kS, kD, alpha, beta, doors);
 			f1.ranPed(p);
 			while (f1.numberOfPed() != f1.numberOfSavedPed() && it <= maxIteration) {
-				f1.singleRunDynField();
+				f1.singleRunDynFieldMoore();
 				it++;
 			}
 			file << x << ":" << y << ":" << it << "\n";
@@ -354,7 +354,7 @@ void runDiagVarKD(floorPed f1, int n, double kD, std::string fileName, std::stri
 		file << k << ":";
 
 		while (f1.numberOfPed() != f1.numberOfSavedPed() && it <= n) {
-			f1.singleRunDynField();
+			f1.singleRunDynFieldMoore();
 			it++;
 		}
 		file << it << "\n";
@@ -380,7 +380,7 @@ void runDiagVarAlpha(floorPed f1, int n, double alpha, std::string fileName, std
 		file << a << ":";
 
 		while (f1.numberOfPed() != f1.numberOfSavedPed() && it <= n) {
-			f1.singleRunDynField();
+			f1.singleRunDynFieldMoore();
 			it++;
 		}
 		file << it << "\n";
@@ -404,7 +404,7 @@ void runDiagVarBeta(floorPed f1, int n, double beta, std::string fileName, std::
 		file << b << ":";
 
 		while (f1.numberOfPed() != f1.numberOfSavedPed() && it <= n) {
-			f1.singleRunDynField();
+			f1.singleRunDynFieldMoore();
 			it++;
 		}
 		file << it << "\n";

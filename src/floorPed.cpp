@@ -408,6 +408,14 @@ double floorPed::expFunction(int i, int j) {
 
 }
 
+double floorPed::expFunction(int i, int j, int p) {
+
+	int x = pedVec[p].position[0];
+	int y = pedVec[p].position[1]; 
+	return exp(kD * (dynField[i][j] - dynField[x][y]))*exp(kS*(statField[i][j]-statField[x][y]))*(1 - occupied[i][j])*obstacle[i][j];
+
+}
+
 
 /*Function that:
 1) calculates the probability matrix of the pedestrians
@@ -496,7 +504,7 @@ void floorPed::singleRunDiag() {
 	}
 }
 
-void floorPed::singleRunAdjDynField() {
+void floorPed::singleRunDynFieldVonNe() {
 	for (int p = 0; p < pedVec.size(); p++) {
 		isPedSafe(p);
 	}
@@ -525,7 +533,7 @@ void floorPed::singleRunAdjDynField() {
 	dynamicDecay();
 }
 
-void floorPed::singleRunDynField() {
+void floorPed::singleRunDynFieldMoore() {
 
 	for (int p = 0; p < pedVec.size(); p++) {
 		isPedSafe(p);
