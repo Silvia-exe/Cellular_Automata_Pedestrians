@@ -11,15 +11,16 @@ Kirchner, A., & Schadschneider, A. (2002). Simulation of evacuation processes us
 This is a cellular automata model based on Kirchner and Schadchneider's model(2002). It aims to study the impact of kD and kS on evacuation time. These variables will affect individual pedestrians differently
 
 # To do
-- Update exponential function
-- Average all dynamic fields of a run to get a heatmap
-- Try with a room sized 63x63 after exponential update
+~- Update exponential function~
+~- Average all dynamic fields of a run to get a heatmap~
+~- Try with a room sized 63x63 after exponential update~
 - Implement different kD and kS for "lost" and "non lost" pedestrians
 - Get data with all updates done
 - Comment the complete code
 
 # Problems found
-- Exponential function returns NaN values for big rooms (bigger than 35x35). Since every cell is a scale of a 40 x 40 cm cell, the maximum simulated room has an area of 196 squared meters, which is a small room in comparison to similar models. This is the *primary* problem to solve.
+- Exponential function returns NaN values for big rooms (bigger than 35x35). Since every cell is a scale of a 40 x 40 cm cell, the maximum simulated room has an area of 196 squared meters, which is a small room in comparison to similar models. This is the *primary* problem to solve. FIXED
 - The program is not user friendly. This should be fixed to allow this program to be useful for educational purposes. 
 
 # Results (so far)
+
