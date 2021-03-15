@@ -20,9 +20,9 @@ def extract_info_from_files(list_of_files):
     file_numb = -1
     row_numb = -1
     points = []
-    kD = 0
-    kS = []
-    for i in range(199):
+    kD =[]
+    kS = 0
+    for i in range(200):
         temp = []
         points.append(temp)
     
@@ -50,8 +50,8 @@ def extract_info_from_files(list_of_files):
                     row[i]=float(row[i])
                 
                 if(file_numb == 0):
-                    kS.append(row[1])
-                    kD = row[0]
+                    kD.append(row[0])
+                    kS = row[1]
                     
                 points[row_numb].append(row[2])
     
@@ -140,11 +140,11 @@ def main():
     plt.rc('grid', color = 'grey')
     plt.rc('grid', alpha = 0.3)
     
-    plt.plot(final_points[2],final_points[0])
+    plt.plot(final_points[1],final_points[0])
     
-    plt.xlabel("Static Field sensitivity parameter $K_S$")
-    plt.ylabel("Time")
-    plt.title("Dynamic Field sensitivity parameter "+ str(final_points[1]))
+    plt.xlabel("Dynamic Field sensitivity parameter $K_S$")
+    plt.ylabel("Number of iterations")
+    plt.title("Static Field sensitivity parameter "+ str(final_points[2]))
     
     plt.savefig(args.root_folder)
     print("[Done]\n")
