@@ -21,6 +21,3 @@ This is a cellular automata model based on Kirchner and Schadchneider's model(20
 # Problems found
 - Exponential function returns NaN values for big rooms (bigger than 35x35). Since every cell is a scale of a 40 x 40 cm cell, the maximum simulated room has an area of 196 squared meters, which is a small room in comparison to similar models. This is the *primary* problem to solve. FIXED
 - The program is not user friendly. This should be fixed to allow this program to be useful for educational purposes. 
-
-# Results (so far)
-
