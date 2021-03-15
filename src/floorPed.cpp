@@ -347,24 +347,23 @@ void floorPed::calcProbMat(int p) {
 
 	pedVec[p].probMat[0][0] = pedVec[p].probMat[2][0] = pedVec[p].probMat[0][2] = pedVec[p].probMat[2][2] = 0;
 	
-	double l = expFunction(i, j - 1);
-	double u = expFunction(i - 1, j);
-	double r = expFunction(i, j + 1);
-	double d = expFunction(i + 1, j);
+	double w = expFunction(i, j - 1, p);
+	double n = expFunction(i - 1, j, p);
+	double e = expFunction(i, j + 1, p);
+	double s = expFunction(i + 1, j, p);
 
-	occupied[i][j] = 0; // This is done so that the probability can be calculated as if the cell wasnt occupied 
-	double c = expFunction(i, j);
-	occupied[i][j] = 1;
+	/*With the new probability function, the cell where the pedestrian stands will always have a value of 1*/
+	double c = 1;
 
-	N = l + u + r + d + c;
+	N = w + e + n + s + c;
 	double norm = 1 / N;
 
-	pedVec[p].probMat[1][0] = (1/N) * l;
-	pedVec[p].probMat[0][1] = (1/N) * u;
-	pedVec[p].probMat[1][2] = (1/N) * r;
-	pedVec[p].probMat[2][1] = (1/N) * d;
+	pedVec[p].probMat[1][0] = (1/N) * w;
+	pedVec[p].probMat[0][1] = (1/N) * n;
+	pedVec[p].probMat[1][2] = (1/N) * e;
+	pedVec[p].probMat[2][1] = (1/N) * s;
 	pedVec[p].probMat[1][1] = (1/N) * c;
-	
+
 }
 
 void floorPed::calcProbMatDiag(int p) {

@@ -145,7 +145,9 @@ void runAllSavedVonNe(floorPed f1, int n, std::string path, bool writeIterations
 	f1.writeStatField2File(path + "/staticField");
 	f1.writeMovements2File(path + "/initialPosition");
 	std::string itFolder = path + "/iterations";
+	std::string dynFolder = path + "/dynField";
 	_mkdir(itFolder.c_str());
+	_mkdir(dynFolder.c_str());
 
 
 	if (writeIterations == 1) {
@@ -153,6 +155,7 @@ void runAllSavedVonNe(floorPed f1, int n, std::string path, bool writeIterations
 			f1.singleRunDynFieldVonNe();
 			it++;
 			f1.writeMovements2File(itFolder + "/iteration" + std::to_string(it));
+			f1.writeDynField2File(dynFolder + "/dynIteration" + std::to_string(it));
 		}
 		f1.writeMovements2File(path + "/finalPosition");
 	}
