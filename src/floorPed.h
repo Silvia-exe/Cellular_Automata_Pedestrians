@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include <map>
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -18,12 +19,15 @@ class floorPed {
 
 	std::vector<std::vector<std::vector<double>>> statFieldVect; //Vector which holds the static field for every door
 	std::vector<pedestrian> pedVec; //Vector which holds all pedestrians in the Floor
+
+	std::map<std::pair<int,int>, std::vector<pedestrian*>> conflictMap;
 	
 	/*It is noted that for x and y sizes of the room, the number of cells which the pedestrians can move is not xy but
 	(x-2)*(y-2) since we take into account the thickness of the walls*/
 	
 	int x; //X size of the Floor
 	int y; // Y size of the Floor
+	int savedPed = 0;
 	double kS; //Static sensitivity coefficient 
 	double kD; //Dynamic sensitivity coefficient
 	double alpha; //Diffuse factor for the Dynamic Field
@@ -67,8 +71,10 @@ private:
 	void resetSavedPed(int p);
 	void pedDecide();
 	void pedDecideDiag();
+	void NewPedDecide();
 	
 	void findNResolveConflicts(int p);
+	void NewfindNResolveConflicts(int p);
 	
 	void dynamicDecay();
 	void statFieldNorm();

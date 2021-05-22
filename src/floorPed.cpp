@@ -1,8 +1,7 @@
-
 #include "stdafx.h"
 #include "floorPed.h"
 
-/*Fills the matrixes with 0 in order to initialize them. 
+/*Fills the matrixes with 0 in order to initialize them.
 Makes indexing easier*/
 void floorPed::startMat() {
 	std::vector<std::vector<double>> temp;
@@ -48,7 +47,7 @@ void floorPed::initMat() {
 }
 
 void floorPed::ranPed(int n) {
-	
+
 	if (n >= (x - 2)*(y - 2)) {
 		std::cout << "Thats too many" << "\n";
 	}
@@ -82,11 +81,11 @@ void floorPed::calcDL() {
 	//std::cout << "Entered calcDL" << "\n";
 	std::vector<int> d(door.size());
 	for (int i = 0; i < x; i++) {
-		for (int j = 0 ; j < y; j++) {
-			for(int k = 0; k < door.size(); k++){
-				d[k] = sqrt(((door[k][0]-i)*(door[k][0] - i)) + ((door[k][1]-j)*(door[k][1]-j)));
+		for (int j = 0; j < y; j++) {
+			for (int k = 0; k < door.size(); k++) {
+				d[k] = sqrt(((door[k][0] - i)*(door[k][0] - i)) + ((door[k][1] - j)*(door[k][1] - j)));
 				if (d[k] > d_L[k]) {
-				d_L[k] = d[k];
+					d_L[k] = d[k];
 				}
 			}
 		}
@@ -102,7 +101,7 @@ void floorPed::calcStatF() {
 				statFieldVect[k][i][j] = d_L[k] - sqrt((door[k][0] - i)*(door[k][0] - i) + (door[k][1] - j)*(door[k][1] - j));
 			}
 		}
-	}	
+	}
 }
 
 /*Sets and calculates the final static field of the floor*/
@@ -119,7 +118,7 @@ void floorPed::statFieldInit() {
 				for (int k = 0; k < door.size(); k++) {
 					if (statField[i][j] < statFieldVect[k][i][j]) {
 						statField[i][j] = statFieldVect[k][i][j];
-						
+
 					}
 				}
 			}
@@ -127,7 +126,7 @@ void floorPed::statFieldInit() {
 	}
 }
 
-/*Sums all values of the static field in N. 
+/*Sums all values of the static field in N.
 All values of the static field are divided by N (and x*y)*/
 void floorPed::statFieldNorm() {
 	double max = 0;
@@ -141,7 +140,7 @@ void floorPed::statFieldNorm() {
 	double norm = 1 / max;
 	for (int i = 0; i < x; i++) {
 		for (int j = 0; j < y; j++) {
-			statField[i][j] *= norm ;
+			statField[i][j] *= norm;
 		}
 	}
 }
@@ -184,10 +183,11 @@ void floorPed::writeStatField2File(std::string fileName) {
 		for (int j = 0; j < y; j++) {
 			if (j == y - 1) {
 				file << statField[i][j];
-			}else{ 
+			}
+			else {
 				file << statField[i][j] << ":";
 			}
-			
+
 		}
 		file << "\n";
 	}
@@ -237,12 +237,12 @@ the pedestrians to go out*/
 void floorPed::buildWall() {
 	for (int i = 0; i < x; i++) {
 		obstacle[i][0] = 0;
-		obstacle[i][y-1] = 0;
+		obstacle[i][y - 1] = 0;
 	}
 
 	for (int j = 0; j < y; j++) {
 		obstacle[0][j] = 0;
-		obstacle[x-1][j] = 0;
+		obstacle[x - 1][j] = 0;
 
 	}
 }
@@ -253,18 +253,18 @@ void floorPed::dynamicDecay() {
 	double temp;
 	double difI;
 	double difJ;
-	for (int i = 1; i < x-1; i++) {
-		for (int j = 1; j < y-1; j++) {
+	for (int i = 1; i < x - 1; i++) {
+		for (int j = 1; j < y - 1; j++) {
 			if (dynField[i][j] != 0) {
-				
+
 				temp = (rand() % 11)*(0.1);
-			
+
 				if (temp < beta) {
 					dynField[i][j] -= 1;
 					temp = (rand() % 11)*(0.1);
-					if (temp < alpha){
-						difI = (rand() % 3)-1;
-						difJ = (rand() % 3)-1;
+					if (temp < alpha) {
+						difI = (rand() % 3) - 1;
+						difJ = (rand() % 3) - 1;
 						dynField[i + difI][j + difJ] += 1;
 					}
 				}
@@ -303,12 +303,12 @@ void floorPed::changeBeta(double _beta) {
 }
 
 void floorPed::resetDynField() {
-	
+
 	for (int i = 0; i < x; i++) {
-		for(int j = 0; j < y; j++){
-		
+		for (int j = 0; j < y; j++) {
+
 			dynField[i][j] = 0;
-		
+
 		}
 	}
 }
@@ -346,7 +346,7 @@ void floorPed::calcProbMat(int p) {
 	double N = 0;
 
 	pedVec[p].probMat[0][0] = pedVec[p].probMat[2][0] = pedVec[p].probMat[0][2] = pedVec[p].probMat[2][2] = 0;
-	
+
 	double w = expFunction(i, j - 1, p);
 	double n = expFunction(i - 1, j, p);
 	double e = expFunction(i, j + 1, p);
@@ -358,11 +358,11 @@ void floorPed::calcProbMat(int p) {
 	N = w + e + n + s + c;
 	double norm = 1 / N;
 
-	pedVec[p].probMat[1][0] = (1/N) * w;
-	pedVec[p].probMat[0][1] = (1/N) * n;
-	pedVec[p].probMat[1][2] = (1/N) * e;
-	pedVec[p].probMat[2][1] = (1/N) * s;
-	pedVec[p].probMat[1][1] = (1/N) * c;
+	pedVec[p].probMat[1][0] = (1 / N) * w;
+	pedVec[p].probMat[0][1] = (1 / N) * n;
+	pedVec[p].probMat[1][2] = (1 / N) * e;
+	pedVec[p].probMat[2][1] = (1 / N) * s;
+	pedVec[p].probMat[1][1] = (1 / N) * c;
 
 }
 
@@ -402,7 +402,7 @@ void floorPed::calcProbMatDiag(int p) {
 
 /*Exponential function that is the basis on calculating the probability matrix*/
 double floorPed::expFunction(int i, int j) {
-	
+
 	return exp(kD * dynField[i][j])*exp(kS*statField[i][j])*(1 - occupied[i][j])*obstacle[i][j];
 
 }
@@ -410,8 +410,8 @@ double floorPed::expFunction(int i, int j) {
 double floorPed::expFunction(int i, int j, int p) {
 
 	int x = pedVec[p].position[0];
-	int y = pedVec[p].position[1]; 
-	return exp(kD * (dynField[i][j] - dynField[x][y]))*exp(kS*(statField[i][j]-statField[x][y]))*(1 - occupied[i][j])*obstacle[i][j];
+	int y = pedVec[p].position[1];
+	return exp(kD * (dynField[i][j] - dynField[x][y]))*exp(kS*(statField[i][j] - statField[x][y]))*(1 - occupied[i][j])*obstacle[i][j];
 
 }
 
@@ -462,7 +462,7 @@ void floorPed::singleRunAllTogether() {
 	}
 
 	for (int p = 0; p < pedVec.size(); p++) {
-		
+
 		if (pedVec[p].escape == 1) {
 			//std::cout << "entered escape if" << "\n";
 			occupied[pedVec[p].position[0]][pedVec[p].position[1]] = 0;
@@ -499,7 +499,7 @@ void floorPed::singleRunDiag() {
 			isPedSafe(p);
 			occupied[pedVec[p].position[0]][pedVec[p].position[1]] = 1;
 		}
-		
+
 	}
 }
 
@@ -575,7 +575,7 @@ void floorPed::pedDecide() {
 
 void floorPed::resetSavedPed(int p) {
 	pedVec[p].desiredMove = { -1,-1 };
-	for (int i = 0; i < 3; i++){
+	for (int i = 0; i < 3; i++) {
 		for (int j = 0; j < 3; j++) {
 			pedVec[p].probMat[i][j] = -1;
 		}
@@ -591,7 +591,7 @@ void floorPed::pedDecideDiag() {
 	}
 }
 
-/*Converts the desired move of the "loser" in its actual position, so the "loser" wont move, 
+/*Converts the desired move of the "loser" in its actual position, so the "loser" wont move,
 and the "winner" will*/
 void floorPed::findNResolveConflicts(int p) {
 	for (int j = 0; j < pedVec.size(); j++) {
@@ -616,37 +616,16 @@ void floorPed::findNResolveConflicts(int p) {
 	}
 }
 
-/*
-void floorPed::findNResolveConflicts(int p) {
-	bool maxP;
-	bool equal;
-	int prob;
-	for (int j = 0; j < pedVec.size(); j++) {
-		if (j != p && pedVec[p].escape + pedVec[j].escape == 0) {
-			if (pedVec[p].desiredMove == pedVec[j].desiredMove) {
-				maxP = pedVec[p].probMax >= pedVec[j].probMax;
-				equal = pedVec[p].probMax == pedVec[j].probMax;
-				prob = (int)maxP + (int)equal;
-				switch (prob) {
-				case 0:
-					pedVec[j].position = pedVec[j].desiredMove;
-					break;
-				case 1:
-					pedVec[p].position = pedVec[p].desiredMove;
-					
-				case 2:
-					if (rand() % 2 == 0) {
-						pedVec[p].position = pedVec[p].desiredMove;
-					}
-					else {
-						pedVec[j].position = pedVec[j].desiredMove;
-					}
-					
-				}
-			}
-		}
+void floorPed::NewPedDecide() {
+	for (int p = 0; p < pedVec.size(); p++) {
+		calcProbMat(p);
+		pedVec[p].chooseMove();
 	}
-}*/
+}
+
+void floorPed::NewfindNResolveConflicts(int p) {
+	
+}
 
 
 void floorPed::clearPed(int p) {
@@ -698,7 +677,7 @@ void floorPed::writeMovements2File(std::string fileName) {
 	file.open(fileName + ".txt");
 	for (int i = 0; i < x; i++) {
 		for (int j = 0; j < y; j++) {
-			if (j == y-1) {
+			if (j == y - 1) {
 				if (obstacle[i][j] == 0) {
 					file << -1;
 				}
