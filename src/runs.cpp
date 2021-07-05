@@ -390,6 +390,7 @@ void runDiagVarAlpha(floorPed f1, int n, double alpha, std::string fileName, std
 	}
 	file.close();
 }
+
 void runDiagVarBeta(floorPed f1, int n, double beta, std::string fileName, std::string path) {
 
 	int it = 0;
