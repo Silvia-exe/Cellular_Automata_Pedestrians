@@ -5,7 +5,7 @@
 #include <fstream>
 #include <string>
 #include <algorithm>
-#include <math.h>
+#include <cmath>
 #include <numeric>
 #include "pedestrian.h"
 
@@ -15,9 +15,10 @@ class floorPed {
 	friend class pedestrian;
 
 	std::vector<std::vector<double>> dynField; //Declaration of Dynamic Field
+	std::vector<std::vector<double>> dynFieldN; //Declaration of Normalized Dynamic Field
 	std::vector<std::vector<double>> statField; //Declaration of Static Field
-	std::vector<std::vector<bool>> occupied; //Declaration of occupation Matrix
-	std::vector<std::vector<bool>> obstacle; //Declaration of obstacle Matrix
+	std::vector<std::vector<int>> occupied; //Declaration of occupation Matrix
+	std::vector<std::vector<int>> obstacle; //Declaration of obstacle Matrix
 
 	std::vector<std::vector<std::vector<double>>> statFieldVect; //Vector which holds the static field for every door
 	std::vector<pedestrian> pedVec; //Vector which holds all pedestrians in the Floor

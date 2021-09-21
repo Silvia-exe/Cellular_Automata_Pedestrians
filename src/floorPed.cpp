@@ -7,15 +7,15 @@ void floorPed::startMat() {
 	std::vector<std::vector<double>> temp;
 	for (int i = 0; i < x; i++) {
 		std::vector<double> doubTemp;
-		std::vector<bool> boolTemp;
+		std::vector<int> intTemp;
 		for (int j = 0; j < y; j++) {
 			doubTemp.push_back(0);
-			boolTemp.push_back(0);
+			intTemp.push_back(0);
 		}
 		dynField.push_back(doubTemp);
 		statField.push_back(doubTemp);
-		occupied.push_back(boolTemp);
-		obstacle.push_back(boolTemp);
+		occupied.push_back(intTemp);
+		obstacle.push_back(intTemp);
 		temp.push_back(doubTemp);
 	}
 
@@ -155,6 +155,9 @@ void floorPed::statFieldInit() {
 			}
 		}
 	}
+	/*Normalizing the static field so that it holds  values between 0 and 1*/
+	statFieldNorm();
+	//printStatField();
 }
 
 /*Sums all values of the static field in N.
@@ -284,35 +287,85 @@ void floorPed::buildWall() {
 	}
 }
 
-/*Ipdates the dynamic field. With the use of a random number, it will decide if the dynamic field cell will decay.
+int inline getRandom(int min, int max)
+{
+	return (rand() % (max - min)) + min;
+}
+
+
+/*Updates the dynamic field. With the use of a random number, it will decide if the dynamic field cell will decay.
 If it decays, it will also decide if it diffuses or not*/
 void floorPed::dynamicDecay() {
-	double temp;
+
 	double difI;
-	double difJ;
-	for (int i = 1; i < x-1; i++) {
-		for (int j = 1; j < y-1; j++) {
-			if (dynField[i][j] != 0) {
+	double maxDynValInv = 0;
+	bool passed = false;
 
-				temp = (rand() % 11)*(0.1);
-
-				if (temp < beta) {
-					dynField[i][j] -= 1;
-					temp = (rand() % 11)*(0.1);
-					if (temp < alpha) {
-						difI = (rand() % 3) - 1;
-						difJ = (rand() % 3) - 1;
-						dynField[i + difI][j + difJ] += 1;
+	for (int i = 0; i < x; i++) {
+		for (int j = 0; j < y; j++) {
+			if (obstacle.at(i).at(j) == 0) {
+				if (dynField[i][j] != 0) {
+					if (dynField[i][j] >= maxDynValInv) {
+						maxDynValInv = dynField[i][j];
 					}
-				}
 
-				if (dynField[i][j] < 0) {
-					dynField[i][j] = 0;
+					if (getRandom(0, 10) * (0.1) < beta) {
+						dynField[i][j] -= 1;
+
+						if (getRandom(0, 10) * (0.1) < alpha) {
+							difI = getRandom(-1, 1);
+							
+							while (passed == false) {
+								
+								try
+								{
+									if (dynField.at(i + difI).at(j) && dynField.at(i).at(j + difI)) {
+
+										std::cout << "PASSED " << std::endl;
+										std::cout << difI << std::endl;
+										passed = true;
+
+									}
+									else {
+										difI = getRandom(-1, 1);
+										std::cout << difI << std::endl;
+										throw 404;
+
+									}
+									
+								}
+								catch (const std::exception&)
+								{
+									std::cout << i + difI << ", " << j << std::endl;
+									std::cout << i << ", " << j+difI << std::endl;
+									std::cout << "Error" << std::endl;
+				
+								}
+								
+							}
+
+							if (getRandom(0, 1) == 0) {
+								dynField[i + difI][j] += 1;
+							}
+							else {
+								dynField[i][j + difI] += 1;
+							}
+						}
+					}
+
+					if (dynField[i][j] < 0) {
+						dynField[i][j] = 0;
+					}
 				}
 			}
 		}
 	}
+
+	for (int i = 0; i < x ; i++) {
+		std::transform(dynField[i].begin(), dynField[i].end(), dynField[i].begin(), [maxDynValInv](double &c) { return c * (1/maxDynValInv); });
+	}
 }
+
 
 /*Accesses and overwrites the dimensions x and y of the room*/
 void floorPed::changeSize(int _x, int _y) {
@@ -450,28 +503,16 @@ void floorPed::calcProbVec(int p) {
 	double e = expFunction(i, j + 1, p);
 	double s = expFunction(i + 1, j, p);
 
-	std::vector<double> testVector = { n,w,c,e,s };
 
 	//std::cout << n << ", " << w << ", " << c << ", " << e << ", " << s << std::endl;
 
-	for (int i = 0; i < testVector.size(); i++) {
-		if (isnan(testVector[i]) == 1 || isinf(testVector[i]) == 1) {
-			//std::cout << "Value with index " << i << " is NaN or +- inf" << std::endl;
-			testVector[i] = 0;
-		}
-	}
+	N = 1 / (n+w+c+e+s);
 
-	N = 1 / accumulate(testVector.begin(), testVector.end(), 0);
-
-	//std::cout << "pedVec after normalizing " << std::endl;
-
-	pedVec[p].probVec[0] = testVector[0] * N;
-	pedVec[p].probVec[1] = testVector[1] * N;
-	pedVec[p].probVec[2] = testVector[2] * N;
-	pedVec[p].probVec[3] = testVector[3] * N;
-	pedVec[p].probVec[4] = testVector[4] * N;
-
-	//std::cout << pedVec[p].probVec[0] << ", " << pedVec[p].probVec[1] << ", " << pedVec[p].probVec[2] << ", " << pedVec[p].probVec[3] << ", " << pedVec[p].probVec[4] << std::endl;
+	pedVec[p].probVec[0] = n * N;
+	pedVec[p].probVec[1] = w * N;
+	pedVec[p].probVec[2] = c * N;
+	pedVec[p].probVec[3] = e * N;
+	pedVec[p].probVec[4] = s * N;
 
 }
 
@@ -488,21 +529,22 @@ double floorPed::expFunction(int i, int j, int p) {
 
 	int x = pedVec[p].position[0];
 	int y = pedVec[p].position[1];
-
-	if (x == 0 || y == 0) {
+	long double expRes = long double(exp(kD * (dynField[i][j] - dynField[x][y]))) * long double(exp(kS * (statField[i][j] - statField[x][y]))) * long double((1 - occupied[i][j])) * long double(obstacle[i][j]);
+	
+	if (isnan(expRes) || isinf(expRes)) {
+		std::cout << "_______________________________________________" << std::endl;
+		std::cout << isnan(expRes) << " ," << isinf(expRes) << std::endl;
 		std::cout << ".....Problem detected....." << std::endl;
 		std::cout << p << std::endl;
-		std::cout << pedVec[p].desiredMove[0] << " " << pedVec[p].desiredMove[1] << std::endl;
-		std::cout << pedVec[p].position[0] << " " << pedVec[p].position[1] << std::endl;
-		std::cout << dynField[pedVec[p].position[0]][pedVec[p].position[1]] << std::endl;
-		std::cout << statField[pedVec[p].position[0]][pedVec[p].position[1]] << std::endl;
-		std::cout << obstacle[pedVec[p].position[0]][pedVec[p].position[1]] << std::endl;
-		std::cout << occupied[pedVec[p].position[0]][pedVec[p].position[1]] << std::endl;
-		std::cout << i << " " << j << std::endl;
+
+		std::cout << "exp(" << kD << "*(" << dynField[i][j] << "-" << dynField[x][y] << ")) = " << exp(kD * (dynField[i][j] - dynField[x][y])) << std::endl;
+		std::cout << "exp(" << kS << "*(" << statField[i][j] << "-" << statField[x][y] << ")) = " << exp(kD * (statField[i][j] - statField[x][y])) << std::endl;
+		std::cout << " 1 - " << occupied[i][j] << "= " << 1-occupied[i][j] << std::endl;
+		std::cout << obstacle[i][j] << std::endl;
+		return 10000;
 	}
-	//std::cout << p << std::endl;
-	//std::cout << exp(kD * (dynField[i][j] - dynField[x][y]))*exp(kS*(statField[i][j] - statField[x][y]))*(1 - occupied[i][j])*obstacle[i][j] << std::endl;
-	return exp(kD * (dynField[i][j] - dynField[x][y]))*exp(kS*(statField[i][j] - statField[x][y]))*(1 - occupied[i][j])*obstacle[i][j];
+	
+	return exp(kD * (dynField[i][j] - dynField[x][y]))*exp(kS*(statField[i][j] - statField[x][y]))*(1-occupied[i][j])*obstacle[i][j];
 
 }
 
