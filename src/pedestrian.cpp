@@ -66,6 +66,7 @@ void pedestrian::chooseMove() {
 
 void pedestrian::chooseMoveVec() {
 	std::vector<double>::iterator i = std::max_element(probVec.begin(), probVec.end());
+	//std::cout << probVec[0] << ", " << probVec[1] << ", " << probVec[2] << " ," << probVec[3] << ", " << probVec[4] << std::endl;
 	int j = std::distance(probVec.begin(), i);
 	double maxProb = *i;
 

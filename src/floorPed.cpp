@@ -296,26 +296,20 @@ int inline getRandom(int min, int max)
 /*Updates the dynamic field. With the use of a random number, it will decide if the dynamic field cell will decay.
 If it decays, it will also decide if it diffuses or not*/
 void floorPed::dynamicDecay() {
-
 	double difI;
-	double maxDynValInv = 0;
+	maxDynVal = 0;
 	bool passed = false;
-
-	for (int i = 0; i < x; i++) {
-		for (int j = 0; j < y; j++) {
-			if (obstacle.at(i).at(j) == 0) {
-				if (dynField[i][j] != 0) {
-					if (dynField[i][j] >= maxDynValInv) {
-						maxDynValInv = dynField[i][j];
-					}
-
-					if (getRandom(0, 10) * (0.1) < beta) {
-						dynField[i][j] -= 1;
-
-						if (getRandom(0, 10) * (0.1) < alpha) {
-							difI = getRandom(-1, 1);
-							
-							while (passed == false) {
+	for (int i = 1; i < x-1; i++) {
+		for (int j = 1; j < y-1; j++) {
+			if (dynField[i][j] != 0) {
+				if (dynField[i][j] >= maxDynVal) {
+					maxDynVal = dynField[i][j];
+				}
+				if (getRandom(0, 10) * (0.1) <= beta) {
+					dynField[i][j] -= 1;
+					if (getRandom(0, 10) * (0.1) <= alpha) {
+						difI = getRandom(-1, 1);
+						/*while (passed == false) {
 								
 								try
 								{
@@ -342,28 +336,24 @@ void floorPed::dynamicDecay() {
 				
 								}
 								
-							}
+							}*/
 
-							if (getRandom(0, 1) == 0) {
-								dynField[i + difI][j] += 1;
-							}
-							else {
-								dynField[i][j + difI] += 1;
-							}
+						if (getRandom(0, 1) == 0) {
+							dynField[i + difI][j] += 1;
+						}
+						else {
+							dynField[i][j + difI] += 1;
 						}
 					}
+				}
 
-					if (dynField[i][j] < 0) {
-						dynField[i][j] = 0;
-					}
+				if (dynField[i][j] < 0) {
+					dynField[i][j] = 0;
 				}
 			}
 		}
 	}
 
-	for (int i = 0; i < x ; i++) {
-		std::transform(dynField[i].begin(), dynField[i].end(), dynField[i].begin(), [maxDynValInv](double &c) { return c * (1/maxDynValInv); });
-	}
 }
 
 
@@ -419,11 +409,9 @@ void floorPed::erasePed() {
 void floorPed::isPedSafe(int p) {
 	for (int i = 0; i < door.size(); i++) {
 		if (pedVec[p].position == door[i]) {
-			//std::cout << "Pedestrian " << p << " was saved" << std::endl;
 			occupied.at(pedVec[p].position[0]).at(pedVec[p].position[1]) = 0;
 			pedVec[p].escape = 1;
 			pedVec.erase(pedVec.begin() + p);
-			//std::cout << pedVec.size() << " pedestrians remaining" << std::endl;
 		}
 	}
 }
@@ -526,12 +514,16 @@ double floorPed::expFunction(int i, int j) {
 
 /*New exponential function which will not throw NaN when the static field value is too high.*/
 double floorPed::expFunction(int i, int j, int p) {
-
+	//std::cout << "Entered expFunc " << std::endl;
 	int x = pedVec[p].position[0];
 	int y = pedVec[p].position[1];
-	long double expRes = long double(exp(kD * (dynField[i][j] - dynField[x][y]))) * long double(exp(kS * (statField[i][j] - statField[x][y]))) * long double((1 - occupied[i][j])) * long double(obstacle[i][j]);
-	
-	if (isnan(expRes) || isinf(expRes)) {
+	//std::cout << "val of MaxDynVal" << maxDynVal << std::endl;
+	/*if (i < 0 || j < 0) {
+		std::cout << pedVec[p].position[0] << "," << pedVec[p].position[1] << std::endl;
+		std::cout << pedVec[p].desiredMove[0] << "," << pedVec[p].desiredMove[1] << std::endl;
+	}*/
+	double expRet = long double(exp(kD * (dynField[i][j] - dynField[x][y])/maxDynVal)) * long double(exp(kS * (statField[i][j] - statField[x][y]))) * long double((1 - occupied[i][j])) * long double(obstacle[i][j]);
+	/*if (isnan(expRes) || isinf(expRes)) {
 		std::cout << "_______________________________________________" << std::endl;
 		std::cout << isnan(expRes) << " ," << isinf(expRes) << std::endl;
 		std::cout << ".....Problem detected....." << std::endl;
@@ -540,11 +532,13 @@ double floorPed::expFunction(int i, int j, int p) {
 		std::cout << "exp(" << kD << "*(" << dynField[i][j] << "-" << dynField[x][y] << ")) = " << exp(kD * (dynField[i][j] - dynField[x][y])) << std::endl;
 		std::cout << "exp(" << kS << "*(" << statField[i][j] << "-" << statField[x][y] << ")) = " << exp(kD * (statField[i][j] - statField[x][y])) << std::endl;
 		std::cout << " 1 - " << occupied[i][j] << "= " << 1-occupied[i][j] << std::endl;
+		std::cout << (dynField[i][j] - dynField[x][y]) / maxDynVal << std::endl;
+		std::cout <<"FULLY NORMALIZED " << exp(kD * (dynField[i][j] - dynField[x][y]) / maxDynVal) * exp(kS * (statField[i][j] - statField[x][y])) * (1 - occupied[i][j]) * obstacle[i][j] << std::endl;
 		std::cout << obstacle[i][j] << std::endl;
 		return 10000;
-	}
+	}*/
 	
-	return exp(kD * (dynField[i][j] - dynField[x][y]))*exp(kS*(statField[i][j] - statField[x][y]))*(1-occupied[i][j])*obstacle[i][j];
+	return expRet;
 
 }
 
@@ -931,7 +925,22 @@ void floorPed::newFindNResolveConflicts() {
 		//std::cout << "Enter" << std::endl;
 		if (conflictVec.at(k).size() > 0) {
 			for (int p = 0; p < conflictVec.at(k).size(); p++) {
-				if (conflictVec.at(k).at(maxPed)->probMax > maxProb && conflictVec.at(k).at(maxPed)->escape == 0) {
+				if (conflictVec.at(k).at(maxPed)->probMax >= maxProb && conflictVec.at(k).at(maxPed)->escape == 0) {
+					/*if (p > 1 && conflictVec.at(k).at(maxPed)->probMax == maxProb) {
+						std::cout << conflictVec.at(k).at(maxPed)->probMax << std::endl;
+						std::cout << maxProb << std::endl;
+						std::cout << maxPed << std::endl;
+						std::cout << p << std::endl;
+						std::cout << "......" << std::endl;
+						if (getRandom(0, 1) == 0) {
+							maxProb = conflictVec.at(k).at(p)->probMax;
+							maxPed = p;
+						}
+					}
+					else {
+						maxProb = conflictVec.at(k).at(p)->probMax;
+						maxPed = p;
+					}*/
 					maxProb = conflictVec.at(k).at(p)->probMax;
 					maxPed = p;
 				}

@@ -15,7 +15,7 @@ class floorPed {
 	friend class pedestrian;
 
 	std::vector<std::vector<double>> dynField; //Declaration of Dynamic Field
-	std::vector<std::vector<double>> dynFieldN; //Declaration of Normalized Dynamic Field
+	//std::vector<std::vector<double>> dynFieldN; //Declaration of Normalized Dynamic Field
 	std::vector<std::vector<double>> statField; //Declaration of Static Field
 	std::vector<std::vector<int>> occupied; //Declaration of occupation Matrix
 	std::vector<std::vector<int>> obstacle; //Declaration of obstacle Matrix
@@ -35,6 +35,7 @@ class floorPed {
 	double kD; //Dynamic sensitivity coefficient
 	double alpha; //Diffuse factor for the Dynamic Field
 	double beta; //Decay factor for Dynamic Field
+	double maxDynVal; //Maximum value of the Dynamic Field at an iteration
 	std::vector<std::vector<int>> door; //Vector which holds doors (vectors with x and y coordinates)
 	std::vector<double> d_L; //Holds the cell furthest away from every door
 
@@ -47,6 +48,7 @@ class floorPed {
 		alpha = alpha_;
 		beta = beta_;
 		door = door_;
+		maxDynVal = 1;
 
 		startMat();
 		initMat();
