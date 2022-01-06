@@ -7,7 +7,11 @@
 #include <algorithm>
 #include <cmath>
 #include <numeric>
+#include <chrono>
+#include <ctime>
 #include "pedestrian.h"
+
+using namespace std::chrono;
 
 
 class floorPed {
@@ -15,10 +19,9 @@ class floorPed {
 	friend class pedestrian;
 
 	std::vector<std::vector<double>> dynField; //Declaration of Dynamic Field
-	//std::vector<std::vector<double>> dynFieldN; //Declaration of Normalized Dynamic Field
 	std::vector<std::vector<double>> statField; //Declaration of Static Field
-	std::vector<std::vector<int>> occupied; //Declaration of occupation Matrix
-	std::vector<std::vector<int>> obstacle; //Declaration of obstacle Matrix
+	std::vector<std::vector<bool>> occupied; //Declaration of occupation Matrix
+	std::vector<std::vector<bool>> obstacle; //Declaration of obstacle Matrix
 
 	std::vector<std::vector<std::vector<double>>> statFieldVect; //Vector which holds the static field for every door
 	std::vector<pedestrian> pedVec; //Vector which holds all pedestrians in the Floor
@@ -30,13 +33,14 @@ class floorPed {
 
 	int x; //X size of the Floor
 	int y; // Y size of the Floor
-	int savedPed = 0;
+	int savedPed = 0; //Counts the number of saved pedestrians DEPRECATED
 	double kS; //Static sensitivity coefficient 
 	double kD; //Dynamic sensitivity coefficient
 	double alpha; //Diffuse factor for the Dynamic Field
 	double beta; //Decay factor for Dynamic Field
 	double maxDynVal; //Maximum value of the Dynamic Field at an iteration
 	std::vector<std::vector<int>> door; //Vector which holds doors (vectors with x and y coordinates)
+	std::vector<std::vector<int>> doorDiff; //Vector which holds the diffussion cell of each door k
 	std::vector<double> d_L; //Holds the cell furthest away from every door
 
 	void initializeFloor(int x_, int y_, double kS_, double kD_, double alpha_, double beta_, std::vector<std::vector<int>> door_) {
@@ -66,6 +70,7 @@ private:
 	void statFieldInit();
 	void startMat();
 	void buildWall();
+	void calcDoorDiff();
 
 	void calcDL();
 	void calcStatF();

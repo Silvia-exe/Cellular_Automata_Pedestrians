@@ -64,36 +64,47 @@ void pedestrian::chooseMove() {
 
 }
 
+/*The highest probability of the probVec is found. The index indicates if the pedestrian's desired move is: 
+0 - North
+1 - West
+2 - Stays in their initial position
+3 - East
+4 - South*/
 void pedestrian::chooseMoveVec() {
-	std::vector<double>::iterator i = std::max_element(probVec.begin(), probVec.end());
-	//std::cout << probVec[0] << ", " << probVec[1] << ", " << probVec[2] << " ," << probVec[3] << ", " << probVec[4] << std::endl;
+	/*std::vector<double>::iterator i = std::max_element(probVec.begin(), probVec.end());
 	int j = std::distance(probVec.begin(), i);
-	double maxProb = *i;
+	double maxProb = *i;*/
+	double max = 0;
+	int j;
+	for (int i = 0; i < probVec.size(); i++) {
+		if (probVec[i] >= max) {
+			j = i;
+			max = probVec[i];
+		}
+	}
+
+	probMax = max;
 
 	switch (j){
 	case 0:
 		desiredMove[0] = position[0] - 1;
 		desiredMove[1] = position[1];
-		probMax = *i;
+		//probMax = *i;
 		break;
 	case 1:
 		desiredMove[0] = position[0];
 		desiredMove[1] = position[1] - 1;
-		probMax = *i;
 		break;
 	case 2:
 		desiredMove = position;
-		probMax = *i;
 		break;
 	case 3:
 		desiredMove[0] = position[0];
 		desiredMove[1] = position[1] + 1;
-		probMax = *i;
 		break;
 	case 4:
 		desiredMove[0] = position[0] + 1;
 		desiredMove[1] = position[1];
-		probMax = *i;
 		break;
 	}
 

@@ -13,15 +13,17 @@ class pedestrian {
 	std::vector<double> probVec; //Vector of size 5 which holds the probabilties. 0 is north, 1 is west, 2 is center, 3 is east, 4 is south.
 	std::vector<int> desiredMove; //Hold the chosen cell the pedestrian wants to move to. Will be used to detect and deal with conflicts
 	double probMax; //Holds the probability of the choosen cell the pedestrian wants to move to
-	bool escape;//0 if not at the door, 1 when at the door
+	double pedKD; //Individual KD parameter that affects this individual pedestrian
+	double pedKS; //Individual KS parameter that affects this individual pedestrian
+	bool escape; //0 if pedestrian is not saved, 1 if it is. DEPRECATED
 
 	void initializePedestrian(int x, int y) {
 		position.push_back(x);
 		position.push_back(y);
 		desiredMove = { 0,0 };
-		escape = 0;
 		initProbVec();
 		initProbMat();
+		escape = 0;
 	}
 
 private:
