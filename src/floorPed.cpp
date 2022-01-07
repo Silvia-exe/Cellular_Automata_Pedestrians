@@ -5,6 +5,7 @@ int getRandom(int min, int max) {
 	return (rand() % (max - min)) + min;
 }
 
+
 /*Fills the matrixes with 0 in order to initialize them.
 Makes indexing easier*/
 void floorPed::startMat() {
@@ -12,14 +13,17 @@ void floorPed::startMat() {
 	for (int i = 0; i < x; i++) {
 		std::vector<double> doubTemp;
 		std::vector<bool> boolTemp;
+		std::vector<int>intTemp;
 		for (int j = 0; j < y; j++) {
 			doubTemp.push_back(0);
 			boolTemp.push_back(0);
+			intTemp.push_back(0);
 		}
 		dynField.push_back(doubTemp);
 		statField.push_back(doubTemp);
 		occupied.push_back(boolTemp);
 		obstacle.push_back(boolTemp);
+		groupMatrix.push_back(intTemp);
 		temp.push_back(doubTemp);
 	}
 
@@ -46,6 +50,12 @@ void floorPed::initMat() {
 	for (int k = 0; k < door.size(); k++) {
 		occupied[door[k][0]][door[k][1]] = 0;
 		obstacle[door[k][0]][door[k][1]] = 1;
+	}
+}
+
+void floorPed::groupMatrixFill(){
+	for (int p = 0; p < pedVec.size(); p++) {
+		groupMatrix[pedVec[p].position[0]][pedVec[p].position[1]] = pedVec[p].groupNumber;
 	}
 }
 
@@ -99,6 +109,38 @@ void floorPed::densityPed(double density) {
 
 }
 
+void floorPed::NEWdensityPed(double density, double paramDensity, double kD2, double kS2) {
+	int numberPed = (x - 2) * (y - 2) * density;
+	pedGroup1 = numberPed * paramDensity;
+	pedGroup2 = numberPed - pedGroup1;
+
+	std::cout << numberPed << std::endl;
+	std::cout << pedGroup1 << std::endl;
+	std::cout << pedGroup2 << std::endl;
+
+	int k = 0;
+	int j = 0;
+
+	for (int i = 0; i < pedGroup1;) {
+		k = getRandom(1, x - 1);
+		j = getRandom(1, y - 1);
+		pedestrian temp = pedestrian(k, j, kD2,kS2, 1);
+		if (addPed(temp) == 1) {
+			i++;
+		}
+
+	}
+
+	for (int i = 0; i < pedGroup2;) {
+		k = getRandom(1, x - 1);
+		j = getRandom(1, y - 1);
+		pedestrian temp = pedestrian(k, j, kD, kS, 2);
+		if (addPed(temp) == 1) {
+			i++;
+		}
+	}
+}
+
 /*Adds a pedestrian to the floor if the cell isn't occupied or has an obstacle*/
 bool floorPed::addPed(pedestrian& p1) {
 	if (obstacle[p1.position[0]][p1.position[1]] == 0 || occupied[p1.position[0]][p1.position[1]] == 1) {
@@ -110,6 +152,9 @@ bool floorPed::addPed(pedestrian& p1) {
 		return 1;
 	}
 }
+
+
+
 
 /*Calculates the furthest away cell from every door*/
 void floorPed::calcDL() {
@@ -342,6 +387,10 @@ void floorPed::dynamicDecay() {
 			}
 		}
 	}
+	if (maxDynVal == 0) {
+		std::cout << "Pedestrians are stuck, dynamic field has fully decayed. " << std::endl;
+		exit(400);
+	}
 }
 
 
@@ -383,6 +432,17 @@ void floorPed::resetDynField() {
 		for (int j = 0; j < y; j++) {
 
 			dynField[i][j] = 0;
+
+		}
+	}
+}
+
+void floorPed::resetGroupMatrix() {
+
+	for (int i = 0; i < x; i++) {
+		for (int j = 0; j < y; j++) {
+
+			groupMatrix[i][j] = 0;
 
 		}
 	}
@@ -434,6 +494,7 @@ void floorPed::calcProbMat(int p) {
 	pedVec[p].probMat[1][2] = (1 / N) * e;
 	pedVec[p].probMat[2][1] = (1 / N) * s;
 	pedVec[p].probMat[1][1] = (1 / N) * c;
+
 
 }
 
@@ -498,6 +559,31 @@ void floorPed::calcProbVec(int p) {
 
 }
 
+void floorPed::NEWcalcProbVec(int p) {
+	int i = pedVec[p].position[0];
+	int j = pedVec[p].position[1];
+
+	double N = 0;
+	//std::cout << "pedVec without normalizing " << std::endl;
+	double n = NEWexpFunction(i - 1, j, p);
+	double w = NEWexpFunction(i, j - 1, p);
+	double c = 1;
+	double e = NEWexpFunction(i, j + 1, p);
+	double s = NEWexpFunction(i + 1, j, p);
+
+
+	//std::cout << n << ", " << w << ", " << c << ", " << e << ", " << s << std::endl;
+
+	N = 1 / (n + w + c + e + s);
+
+	pedVec[p].probVec[0] = n * N;
+	pedVec[p].probVec[1] = w * N;
+	pedVec[p].probVec[2] = c * N;
+	pedVec[p].probVec[3] = e * N;
+	pedVec[p].probVec[4] = s * N;
+
+}
+
 
 /*Exponential function that is the basis for calculating the probability matrix DEPRECATED*/
 double floorPed::expFunction(int i, int j) {
@@ -509,32 +595,26 @@ double floorPed::expFunction(int i, int j) {
 /*New exponential function which will not throw NaN when the static field value is too high.*/
 double floorPed::expFunction(int i, int j, int p) {
 
-	//std::cout << "Entered expFunc " << std::endl;
 	int x = pedVec[p].position[0];
 	int y = pedVec[p].position[1];
-	//std::cout << "val of MaxDynVal" << maxDynVal << std::endl;
-	
-	//double expRet = 
-
-	/*if (isnan(expRes) || isinf(expRes)) {
-		std::cout << "_______________________________________________" << std::endl;
-		std::cout << isnan(expRes) << " ," << isinf(expRes) << std::endl;
-		std::cout << ".....Problem detected....." << std::endl;
-		std::cout << p << std::endl;
-		std::cout << "exp(" << kD << "*(" << dynField[i][j] << "-" << dynField[x][y] << ")) = " << exp(kD * (dynField[i][j] - dynField[x][y])) << std::endl;
-		std::cout << "exp(" << kS << "*(" << statField[i][j] << "-" << statField[x][y] << ")) = " << exp(kD * (statField[i][j] - statField[x][y])) << std::endl;
-		std::cout << " 1 - " << occupied[i][j] << "= " << 1-occupied[i][j] << std::endl;
-		std::cout << (dynField[i][j] - dynField[x][y]) / maxDynVal << std::endl;
-		std::cout <<"FULLY NORMALIZED " << exp(kD * (dynField[i][j] - dynField[x][y]) / maxDynVal) * exp(kS * (statField[i][j] - statField[x][y])) * (1 - occupied[i][j]) * obstacle[i][j] << std::endl;
-		std::cout << obstacle[i][j] << std::endl;
-		return 10000;
-	}*/
 
 	return (exp(kD * (dynField[i][j] - dynField[x][y]) / maxDynVal)) *
 		(exp(kS * (statField[i][j] - statField[x][y]))) * ((1 - occupied[i][j])) * (obstacle[i][j]);
 
 }
 
+/*New exponential function which will not throw NaN when the static field value is too high.*/
+double floorPed::NEWexpFunction(int i, int j, int p) {
+
+	int x = pedVec[p].position[0];
+	int y = pedVec[p].position[1];
+	double pedKD = pedVec[p].pedKD;
+	double pedKS = pedVec[p].pedKS;
+
+	return (exp(pedKD * (dynField[i][j] - dynField[x][y]) / maxDynVal)) *
+		(exp(pedKS * (statField[i][j] - statField[x][y]))) * ((1 - occupied[i][j])) * (obstacle[i][j]);
+
+}
 
 /*Function that:
 1) calculates the probability matrix of the pedestrians
@@ -704,45 +784,57 @@ Will be changed from testRun to finalRun, since this is the most updated version
 void floorPed::testRun() {
 	
 	/*Checks which pedestrians are safe. This means, which pedestrians are standing on the door's positions*/
-	auto start = high_resolution_clock::now();
+	
 	for (int k = 0; k < door.size(); k++) {
 		isPedSafe(k);
 	}
-	auto stop = high_resolution_clock::now();
-	auto duration = duration_cast<microseconds>(stop - start);
-	std::cout <<"Duration isPedSafe loop " << duration.count() << std::endl;
 
 	/*Pedestrians calculate their probability vector and chooses the highest probability. 
 	Then, from this probability, they select their desired move.*/
-	start = high_resolution_clock::now();
-	newPedDecide();
-	stop = high_resolution_clock::now();
-	duration = duration_cast<microseconds>(stop - start);
-	std::cout << "Duration newPedDecide " << duration.count() << std::endl;
+	pedDecideVect();
 
 	/*The ConflictVect is filled up with the pedestrian's desired move to then resolve the conflicts.*/
-	start = high_resolution_clock::now();
 	fillConflictVect();
-	stop = high_resolution_clock::now();
-	duration = duration_cast<microseconds>(stop - start);
-	std::cout << "Duration fillConflictVect " << duration.count() << std::endl;
 
 	/*If two or more pedestrians have the same desired move,
 	the conflicts are resolved by choosing the pedestrian with the highest probability to move.
 	It moves the pedestrians and adds 1 to the dynamic field.*/
-	start = high_resolution_clock::now();
 	newFindNResolveConflicts();
-	stop = high_resolution_clock::now();
-	duration = duration_cast<microseconds>(stop - start);
-	std::cout << "Duration newFindNResolveConflicts " << duration.count() << std::endl;
 
 	/*The dynamic field is updated with the decay and difussion dynamics.*/
-	start = high_resolution_clock::now();
 	dynamicDecay();
-	stop = high_resolution_clock::now();
-	duration = duration_cast<microseconds>(stop - start);
-	std::cout << "Duration dynamicDecay " << duration.count() << std::endl;
+
 	
+}
+
+/*New testRun now using the new probability vectors and efficient conflict solving. WIP
+Will be changed from testRun to finalRun, since this is the most updated version of the individual run.*/
+void floorPed::NEWtestRun() {
+
+	resetGroupMatrix();
+
+	/*Checks which pedestrians are safe. This means, which pedestrians are standing on the door's positions*/
+	for (int k = 0; k < door.size(); k++) {
+		isPedSafe(k);
+	}
+	
+	/*Pedestrians calculate their probability vector and chooses the highest probability.
+	Then, from this probability, they select their desired move.*/
+	NEWPedDecide();
+
+	/*The ConflictVect is filled up with the pedestrian's desired move to then resolve the conflicts.*/
+	fillConflictVect();
+
+	/*If two or more pedestrians have the same desired move,
+	the conflicts are resolved by choosing the pedestrian with the highest probability to move.
+	It moves the pedestrians and adds 1 to the dynamic field.*/
+	newFindNResolveConflicts();
+	
+	/*The dynamic field is updated with the decay and difussion dynamics.*/
+	dynamicDecay();
+
+	groupMatrixFill();
+
 }
 
 /*All pedestrians calculate their probability matrix, and from there they will choose which cell they will move to.*/
@@ -752,6 +844,13 @@ void floorPed::pedDecide() {
 			calcProbMat(p);
 			pedVec[p].chooseMove();
 		}
+	}
+}
+
+void floorPed::pedDecideVect() {
+	for (int p = 0; p < pedVec.size(); p++) {
+		calcProbVec(p);
+		pedVec[p].chooseMoveVec();
 	}
 }
 
@@ -802,12 +901,11 @@ void floorPed::findNResolveConflicts(int p) {
 }
 
 /*Runs calcProbVec for all pedestrians and then makes the pedestrian choose their new desired move*/
-void floorPed::newPedDecide() {
+void floorPed::NEWPedDecide() {
 	
 	for (int p = 0; p < pedVec.size(); p++) {
 		
-			calcProbVec(p);
-			
+			NEWcalcProbVec(p);
 			pedVec[p].chooseMoveVec();	
 
 	}
@@ -902,6 +1000,25 @@ void floorPed::writeMovements2File(std::string fileName) {
 					}
 				}
 			}
+		}
+		file << "\n";
+	}
+	file.close();
+}
+
+void floorPed::NEWwriteMovements2File(std::string fileName) {
+	std::ofstream file;
+	int ped = 0;
+	file.open(fileName + ".txt");
+	for (int i = 0; i < x; i++) {
+		for (int j = 0; j < y; j++) {
+			if (j == y - 1) {
+				file << groupMatrix[i][j];
+			}
+			else {
+				file << groupMatrix[i][j] << ":";
+			}
+			
 		}
 		file << "\n";
 	}

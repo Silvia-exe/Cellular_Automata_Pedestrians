@@ -77,7 +77,7 @@ void pedestrian::chooseMoveVec() {
 	double max = 0;
 	int j;
 	for (int i = 0; i < probVec.size(); i++) {
-		if (probVec[i] >= max) {
+		if (probVec[i] > max) {
 			j = i;
 			max = probVec[i];
 		}

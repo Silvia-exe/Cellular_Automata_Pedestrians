@@ -22,6 +22,7 @@ class floorPed {
 	std::vector<std::vector<double>> statField; //Declaration of Static Field
 	std::vector<std::vector<bool>> occupied; //Declaration of occupation Matrix
 	std::vector<std::vector<bool>> obstacle; //Declaration of obstacle Matrix
+	std::vector<std::vector<int>> groupMatrix; //Declaration of group Matrix
 
 	std::vector<std::vector<std::vector<double>>> statFieldVect; //Vector which holds the static field for every door
 	std::vector<pedestrian> pedVec; //Vector which holds all pedestrians in the Floor
@@ -43,6 +44,9 @@ class floorPed {
 	std::vector<std::vector<int>> doorDiff; //Vector which holds the diffussion cell of each door k
 	std::vector<double> d_L; //Holds the cell furthest away from every door
 
+	int pedGroup1; //Counts the number of pedestrians to hold the first combination of parameters.
+	int pedGroup2; //Counts the number of pedestrians to hold the second combination of parameters.
+
 	void initializeFloor(int x_, int y_, double kS_, double kD_, double alpha_, double beta_, std::vector<std::vector<int>> door_) {
 
 		x = x_;
@@ -54,6 +58,9 @@ class floorPed {
 		door = door_;
 		maxDynVal = 1;
 
+		pedGroup1 = 0;
+		pedGroup2 = 0;
+
 		startMat();
 		initMat();
 		initConflictVec();
@@ -64,10 +71,12 @@ private:
 
 	double expFunction(int i, int j);
 	double expFunction(int i, int j, int p);
+	double NEWexpFunction(int i, int j, int p);
 
 	void initMat();
 	void initConflictVec();
 	void statFieldInit();
+	void groupMatrixFill();
 	void startMat();
 	void buildWall();
 	void calcDoorDiff();
@@ -78,13 +87,15 @@ private:
 	void calcProbMat(int p);
 	void calcProbMatDiag(int p);
 	void calcProbVec(int p);
+	void NEWcalcProbVec(int p);
 
 	void isPedSafe(int p);
 	void clearPed(int p);
 	void resetSavedPed(int p);
 	void pedDecide();
+	void pedDecideVect();
 	void pedDecideDiag();
-	void newPedDecide();
+	void NEWPedDecide();
 
 	void fillConflictVect();
 
@@ -97,6 +108,7 @@ private:
 
 	void resetDynField();
 	void resetOccupied();
+	void resetGroupMatrix();
 
 	int coord2Indx(int p);
 
@@ -107,6 +119,8 @@ public:
 	void densityPed(double density);
 	void erasePed();
 
+	void NEWdensityPed(double density, double paramDensity, double kD2, double kS2);
+
 	void singleRun();
 	void singleRunAllTogether();
 	void singleRunDiag();
@@ -114,6 +128,7 @@ public:
 	void singleRunSave();
 	void singleRunDynFieldMoore();
 	void testRun();
+	void NEWtestRun();
 
 	void printMovements();
 	void printStatField();
@@ -126,6 +141,8 @@ public:
 	void writeStatField2File(std::string fileName);
 	void writeDynField2File(std::string fileName);
 	void writeData2File(std::string path);
+
+	void NEWwriteMovements2File(std::string fileName);
 
 	void changeSize(int _x, int _y);
 	void changeKD(double _kD);
