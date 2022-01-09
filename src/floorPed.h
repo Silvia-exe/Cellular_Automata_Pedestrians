@@ -41,7 +41,6 @@ class floorPed {
 	double beta; //Decay factor for Dynamic Field
 	double maxDynVal; //Maximum value of the Dynamic Field at an iteration
 	std::vector<std::vector<int>> door; //Vector which holds doors (vectors with x and y coordinates)
-	std::vector<std::vector<int>> doorDiff; //Vector which holds the diffussion cell of each door k
 	std::vector<double> d_L; //Holds the cell furthest away from every door
 
 	int pedGroup1; //Counts the number of pedestrians to hold the first combination of parameters.
@@ -64,7 +63,7 @@ class floorPed {
 		startMat();
 		initMat();
 		initConflictVec();
-		//buildWall();
+		//buildWall(); //Uncomment if you want to have the door(s) "closed"
 	}
 
 private:
@@ -79,7 +78,6 @@ private:
 	void groupMatrixFill();
 	void startMat();
 	void buildWall();
-	void calcDoorDiff();
 
 	void calcDL();
 	void calcStatF();
@@ -155,7 +153,6 @@ public:
 	void resetFloor(int p);
 
 	void resetFloor(double rho);
-
 
 	floorPed(int x_, int y_, double kS_, double kD_, double alpha_, double beta_, std::vector<std::vector<int>> door_) {
 		initializeFloor(x_, y_, kS_, kD_, alpha_, beta_, door_);
