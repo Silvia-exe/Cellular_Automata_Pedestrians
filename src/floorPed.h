@@ -70,7 +70,11 @@ private:
 
 	double expFunction(int i, int j);
 	double expFunction(int i, int j, int p);
+	double expFunctionNorm(int i, int j);
 	double NEWexpFunction(int i, int j, int p);
+
+	double probFunction(int i, int j, double maxFloorValues);
+	double probFunctionCorrection(int i, int j, int p);
 
 	void initMat();
 	void initConflictVec();

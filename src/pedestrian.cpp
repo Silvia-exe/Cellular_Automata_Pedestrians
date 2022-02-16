@@ -78,11 +78,13 @@ void pedestrian::chooseMoveVec() {
 	int j;
 	for (int i = 0; i < probVec.size(); i++) {
 		if (probVec[i] > max) {
+			//std::cout << "entered here" << std::endl;
 			j = i;
 			max = probVec[i];
 		}
 	}
 
+	desiredDirection = j;
 	probMax = max;
 
 	switch (j){
