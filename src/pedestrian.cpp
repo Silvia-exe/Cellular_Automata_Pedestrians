@@ -74,8 +74,10 @@ void pedestrian::chooseMoveVec() {
 	/*std::vector<double>::iterator i = std::max_element(probVec.begin(), probVec.end());
 	int j = std::distance(probVec.begin(), i);
 	double maxProb = *i;*/
-	double max = 0;
 	int j;
+	double max = -1;
+	
+	
 	for (int i = 0; i < probVec.size(); i++) {
 		if (probVec[i] > max) {
 			//std::cout << "entered here" << std::endl;
@@ -83,9 +85,14 @@ void pedestrian::chooseMoveVec() {
 			max = probVec[i];
 		}
 	}
-
+	
 	desiredDirection = j;
 	probMax = max;
+
+	//std::cout << "Desired direction: " << desiredDirection << std::endl;
+	//std::cout << "Prob Max: " << probMax << std::endl;
+
+	//std::cout << "--------------------------oooo---------------------" << std::endl;
 
 	switch (j){
 	case 0:

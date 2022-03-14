@@ -50,6 +50,7 @@ void floorPed::startMat() {
 			intTemp.push_back(0);
 		}
 		dynField.push_back(doubTemp); //Initializes dynamic Field
+		auxDynField.push_back(doubTemp); //Initializes auxiliary dynamic field
 		statField.push_back(doubTemp); //Initializes static Field
 		occupied.push_back(boolTemp); //Initializes occupied Field
 		obstacle.push_back(boolTemp); //Initizalizes obstacle Field
@@ -291,15 +292,17 @@ void floorPed::dynamicDecay() {
 	int difI;
 	maxDynVal = 0;
 	bool passed = false;
-	for (int i = 1; i < x - 1; i++) {
-		for (int j = 1; j < y - 1; j++) {
+	for (int i = 1; i < x-1; i++) {
+		for (int j = 1; j < y-1; j++) {
 			if (dynField[i][j] != 0) {
 				/*if (dynField[i][j] >= maxDynVal) {
 					maxDynVal = dynField[i][j];
 				}*/
 				if (getRandom(0, 11) * (0.1) <= beta) {
-					dynField[i][j] -= 1;
+					//std::cout << i << ", " << j << "Will decay. " << std::endl;
+					auxDynField[i][j] -= 1;
 					if (getRandom(0, 11) * (0.1) <= alpha) {
+						//std::cout << i << ", " << j << "Will diffuse to: ";
 						difI = 1 + getRandom(0, 2) * (-2);
 						//std::cout << difI << std::endl;
 						while (passed == false) {
@@ -312,19 +315,31 @@ void floorPed::dynamicDecay() {
 							}
 						}
 						if (getRandom(0, 2) == 0) {
-							dynField[i + difI][j] += 1;
+							auxDynField[i + difI][j] += 1;
+							//std::cout << i + difI << ", " << j << std::endl;
 						}
 						else {
-							dynField[i][j + difI] += 1;
+							auxDynField[i][j + difI] += 1;
+							//std::cout << i << ", " << j + difI << std::endl;
 						}
 					}
-				}
-				if (dynField[i][j] < 0) {
-					dynField[i][j] = 0;
 				}
 			}
 		}
 	}
+
+	for (int i = 1; i < x - 1; i++) {
+		for (int j = 1; j < y - 1; j++) {
+			dynField[i][j] += auxDynField[i][j];
+			auxDynField[i][j] = 0;
+			if (dynField[i][j] < 0) {
+				dynField[i][j] = 0;
+			}
+		}
+	}
+	
+	//printDynField();
+
 	/*if (maxDynVal == 0) {
 		std::cout << "Pedestrians are stuck, dynamic field has fully decayed. " << std::endl;
 		exit(400);
@@ -414,14 +429,19 @@ one for each direction the pedestrian will move. It ignores diagonals, and so fo
 void floorPed::calcProbVec(int p) {
 	int i = pedVec[p].position[0];
 	int j = pedVec[p].position[1];
+	double N = 0;
 	std::vector<double> floorValues = { 0,0,0,0,0 };
-	double maxFloorValue = -1;
+	std::vector<int> correctionCells = { 4,3,2,1,0 };
+	double maxFloorValue;
+	int randomInt = getRandom(0, 5);
 
 	floorValues[0] = kD * dynField[i - 1][j] + kS * statField[i - 1][j];
 	floorValues[1] = kD * dynField[i][j - 1] + kS * statField[i][j - 1];
 	floorValues[2] = kD * dynField[i][j] + kS * statField[i][j];
 	floorValues[3] = kD * dynField[i][j + 1] + kS * statField[i][j + 1];
-	floorValues[3] = kD * dynField[i + 1][j] + kS * statField[i + 1][j];
+	floorValues[4] = kD * dynField[i + 1][j] + kS * statField[i + 1][j];
+
+	maxFloorValue = floorValues[randomInt];
 
 	for (int i = 0; i < floorValues.size(); i++) {
 		if (floorValues[i] > maxFloorValue) {
@@ -439,42 +459,52 @@ void floorPed::calcProbVec(int p) {
 	double e = probFunction(i, j + 1, maxFloorValue);
 	double s = probFunction(i + 1, j, maxFloorValue);
 
-	/*switch (pedVec[p].desiredDirection)
+	/*std::cout << "Pedestrian number: " << p << std::endl;
+	std::cout << correctionCells[pedVec[p].desiredDirection] << std::endl;
+	std::cout << "Before correction: " << std::endl;
+	std::cout << n << ", " << w << ", " << c << ", " << e << ", " << s << std::endl;*/
+
+	switch (correctionCells[pedVec[p].desiredDirection])
 	{
 	case 0:
-		n = probFunctionCorrection(i - 1, j,p);
+		n = probFunctionCorrection(i - 1, j, maxFloorValue);
 		break;
 	case 1:
-		w = probFunctionCorrection(i, j - 1,p);
-	case 2:
-		occupied[i][j] = 0; // This is done so that the probability can be calculated as if the cell wasnt occupied 
-		c = probFunctionCorrection(i, j,p);
-		occupied[i][j] = 1;
-		break;
+		w = probFunctionCorrection(i, j - 1, maxFloorValue);
 	case 3:
-		e = probFunctionCorrection(i, j + 1,p);
+		e = probFunctionCorrection(i, j + 1, maxFloorValue);
 		break;
 	case 4:
-		s = probFunctionCorrection(i + 1, j,p);
+		s = probFunctionCorrection(i + 1, j, maxFloorValue);
 		break;
 	default:
 		break;
-	}*/
+	}
 
-	//std::cout << n << ", " << w << ", " << c << ", " << e << ", " << s << std::endl;
+	/*std::cout << "-----------------------" << std::endl;
+	std::cout << "Pedestrian number: " << p << std::endl;
+	std::cout << "After correction: " << std::endl;
+	std::cout << n << ", " << w << ", " << c << ", " << e << ", " << s << std::endl;
 	//std::cout << expFunction(i - 1, j) << std::endl;
 	//std::cout << "statField: " << statField[i - 1][j] << std::endl;
 	//std::cout << "dynField: " << dynField[i - 1][j] << std::endl;
 	//std::cout << "occupied: " << occupied[i - 1][j] << std::endl;
-	//std::cout << "obstacle: " << obstacle[i - 1][j] << std::endl;
-	//std::cout << n + w + c + e + s << std::endl;
+	//std::cout << "obstacle: " << obstacle[i - 1][j] << std::endl;*/
+	N =1/( n + w + c + e + s);
 	
-	pedVec[p].probVec[0] = n;
-	pedVec[p].probVec[1] = w;
-	pedVec[p].probVec[2] = c;
-	pedVec[p].probVec[3] = e;
-	pedVec[p].probVec[4] = s;
+	pedVec[p].probVec[0] = N*n;
+	pedVec[p].probVec[1] = N*w;
+	pedVec[p].probVec[2] = N*c;
+	pedVec[p].probVec[3] = N*e;
+	pedVec[p].probVec[4] = N*s;
 
+	/*std::cout << pedVec[p].probVec[0] << ", "
+		<< pedVec[p].probVec[1] << ", "
+		<< pedVec[p].probVec[2] << ", "
+		<< pedVec[p].probVec[3] << ", "
+		<< pedVec[p].probVec[4] << std::endl;
+
+	std::cout << "-----------------------" << std::endl;*/
 }
 
 void floorPed::NEWcalcProbVec(int p) {
@@ -533,6 +563,7 @@ void floorPed::pedDecideVect() {
 			std::cout << pedVec[p].desiredMove[0] << ", " << pedVec[p].desiredMove[1] << std::endl;
 			std::cout << "Crashed" << std::endl;
 		}*/
+		//std::cout << "-----------------" << p << "-----------------" << std::endl;
 		calcProbVec(p);
 		pedVec[p].chooseMoveVec();
 	}
@@ -576,12 +607,12 @@ void floorPed::findNResolveConflicts(int p) {
 Uses the conflict vector*/
 void floorPed::newFindNResolveConflicts() {
 	double maxProb = -1;
-	double relativeProb = 0;
-	double relativeProbTemp = 0;
+	//double relativeProb = 0;
+	//double relativeProbTemp = 0;
 	int maxPed = 0;
 	int it = 0;
 	int jt = 0;
-	std::vector <int> tempPosition;
+	//std::vector <int> tempPosition;
 	for (int k = 0; k < conflictVec.size(); k++) {
 		if (conflictVec.at(k).size() > 0) {
 			for (int p = 0; p < conflictVec.at(k).size(); p++) {
@@ -598,19 +629,20 @@ void floorPed::newFindNResolveConflicts() {
 				}
 			} 
 			if (conflictVec.at(k).at(maxPed)->position != conflictVec.at(k).at(maxPed)->desiredMove) {
+				//std::cout << "Pedestrian has dropped a crumble to position" << conflictVec.at(k).at(maxPed)->position[0] << ", " << conflictVec.at(k).at(maxPed)->position[1] << std::endl;
 				dynField[conflictVec.at(k).at(maxPed)->position[0]][conflictVec.at(k).at(maxPed)->position[1]] += 1;
 			}
-			tempPosition = conflictVec.at(k).at(maxPed)->position;
+			//tempPosition = conflictVec.at(k).at(maxPed)->position;
 			occupied.at(conflictVec.at(k).at(maxPed)->position[0]).at(conflictVec.at(k).at(maxPed)->position[1]) = 0;
 			conflictVec.at(k).at(maxPed)->position = conflictVec.at(k).at(maxPed)->desiredMove;
 			occupied.at(conflictVec.at(k).at(maxPed)->position[0]).at(conflictVec.at(k).at(maxPed)->position[1]) = 1;
 
 			maxProb = 0;
 			maxPed = 0;
-			relativeProb = 0;
-			relativeProbTemp = 0;
-			conflictVec.at(k).at(maxPed)-> desiredMove = tempPosition;
-			tempPosition.clear();
+			//relativeProb = 0;
+			//relativeProbTemp = 0;
+			//conflictVec.at(k).at(maxPed)-> desiredMove = tempPosition;
+			//tempPosition.clear();
 		}
 		conflictVec.at(k).clear();
 	}
@@ -623,7 +655,9 @@ void floorPed::fillConflictVect() {
 	for (int p = 0; p < pedVec.size(); p++) {
 		k = coord2Indx(p);
 		conflictVec[k].push_back(&pedVec[p]);
+		//std::cout << k << std::endl;
 	}
+
 }
 
 /*Exponential function that is the basis for calculating the probability matrix DEPRECATED*/
@@ -720,18 +754,9 @@ double floorPed::probFunction(int i, int j, double maxFloorValues) {
 	return (exp( ((kD * dynField[i][j]) + (kS * statField[i][j])) - maxFloorValues)) * (1 - occupied[i][j]) * (obstacle[i][j]);
 }
 
-double floorPed::probFunctionCorrection(int i, int j, int p) {
-	double correctedValue = dynField[i][j];
-	if (dynField[i][j] > 0) {
-		correctedValue = dynField[i][j]--;
-	}
-
-	int x = pedVec[p].position[0];
-	int y = pedVec[p].position[1];
-
-	return (exp(kD * (correctedValue - dynField[x][y]))) *
-		(exp(kS * (statField[i][j] - statField[x][y]))) * ((1 - occupied[i][j])) * (obstacle[i][j]);
-	
+double floorPed::probFunctionCorrection(int i, int j, double maxFloorValues) {
+	return (exp(((kD * dynField[i][j]) + (kS * statField[i][j])) - maxFloorValues)) * (1 - occupied[i][j]) * (obstacle[i][j]) 
+		* exp(-kD * dynField[i][j]);
 }
 
 /*------------------------------------------------------------------------------------------------------------------------------------------------------------*/
@@ -904,7 +929,8 @@ void floorPed::singleRunDynFieldMoore() {
 /*New testRun now using the new probability vectors and efficient conflict solving. WIP
 Will be changed from testRun to finalRun, since this is the most updated version of the individual run.*/
 void floorPed::testRun() {
-	
+	//std::cout << "------------Starting iteration-------------" << std::endl;
+	//printMovements();
 	/*The dynamic field is updated with the decay and difussion dynamics.*/
 	dynamicDecay();
 
@@ -926,6 +952,9 @@ void floorPed::testRun() {
 		isPedSafe(k);
 	}
 
+	/*printMovements();
+	printDynField();
+	std::cout << "------------Finished iteration-------------" << std::endl;*/
 }
 
 /*New testRun now using the new probability vectors and efficient conflict solving. WIP

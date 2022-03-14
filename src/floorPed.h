@@ -19,6 +19,7 @@ class floorPed {
 	friend class pedestrian;
 
 	std::vector<std::vector<double>> dynField; //Declaration of Dynamic Field
+	std::vector<std::vector<double>> auxDynField; //Declaration of Dynamic Field
 	std::vector<std::vector<double>> statField; //Declaration of Static Field
 	std::vector<std::vector<bool>> occupied; //Declaration of occupation Matrix
 	std::vector<std::vector<bool>> obstacle; //Declaration of obstacle Matrix
@@ -74,7 +75,7 @@ private:
 	double NEWexpFunction(int i, int j, int p);
 
 	double probFunction(int i, int j, double maxFloorValues);
-	double probFunctionCorrection(int i, int j, int p);
+	double probFunctionCorrection(int i, int j, double maxFloorValues);
 
 	void initMat();
 	void initConflictVec();

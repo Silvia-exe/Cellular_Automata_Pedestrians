@@ -29,7 +29,7 @@ class pedestrian {
 		pedKD = pedKD_;
 		pedKS = pedKS_;
 		groupNumber = group_;
-		desiredDirection = -1;
+		desiredDirection = 2;
 	}
 
 private:
