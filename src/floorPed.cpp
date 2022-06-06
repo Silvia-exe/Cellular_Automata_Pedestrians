@@ -11,6 +11,12 @@ int getRandom(int min, int max) {
 	return (rand() % (max - min)) + min;
 }
 
+
+/*Gets a random number between 0 and 1*/
+double getRandom01() {
+	return ceil(((double)rand() / RAND_MAX)*10)/10;
+}
+
 /*Converts an x,y coordinate unto a single index.*/
 int floorPed::coord2Indx(int p) {
 	int i = pedVec[p].desiredMove[0];
@@ -147,25 +153,18 @@ void floorPed::statFieldInit() {
 			}
 		}
 	}
-	/*Normalizing the static field so that it holds  values between 0 and 1*/
-	//statFieldNorm();
+	/*Getting the biggest value of the staticField*/
+	statFieldNorm();
 }
 
-/*Sums all values of the static field in N.
-All values of the static field are divided by N (and x*y) DEPRECATED*/
+/*Gets biggest value of Static Field*/
 void floorPed::statFieldNorm() {
 	double max = 0;
 	for (int i = 0; i < x; i++) {
 		for (int j = 0; j < y; j++) {
 			if (statField[i][j] >= max) {
-				max = statField[i][j];
+				maxStatVal = statField[i][j];
 			}
-		}
-	}
-	double norm = 1 / max;
-	for (int i = 0; i < x; i++) {
-		for (int j = 0; j < y; j++) {
-			statField[i][j] *= norm;
 		}
 	}
 }
@@ -290,60 +289,59 @@ void floorPed::NEWdensityPed(double density, double paramDensity, double kD2, do
 If it decays, it will also decide if it diffuses or not*/
 void floorPed::dynamicDecay() {
 	int difI;
-	maxDynVal = 0;
 	bool passed = false;
-	for (int i = 1; i < x-1; i++) {
+	int dynFieldMagn = 0;
+
+	for (int i = 0; i < x-1; i++) {
 		for (int j = 1; j < y-1; j++) {
 			if (dynField[i][j] != 0) {
-				/*if (dynField[i][j] >= maxDynVal) {
-					maxDynVal = dynField[i][j];
-				}*/
-				if (getRandom(0, 11) * (0.1) <= beta) {
-					//std::cout << i << ", " << j << "Will decay. " << std::endl;
-					auxDynField[i][j] -= 1;
-					if (getRandom(0, 11) * (0.1) <= alpha) {
-						//std::cout << i << ", " << j << "Will diffuse to: ";
+				dynFieldMagn = dynField[i][j];
+				for (int k = 0; k < dynFieldMagn; k++) {
+					if (getRandom01() <= beta) {
+						auxDynField[i][j] -= 1;
+					}else{
+					if (getRandom01() <= alpha) {
+						//auxDynField[i][j] -= 1;
 						difI = 1 + getRandom(0, 2) * (-2);
 						//std::cout << difI << std::endl;
 						while (passed == false) {
 							if (i + difI < 0 || i + difI > x || j + difI < 0 || j + difI > y) {
 								difI = 1 + getRandom(0, 2) * (-2);
-								//std::cout << difI << std::endl;
-							}
-							else {
-								passed = true;
+							} else {
+							passed = true;
 							}
 						}
-						if (getRandom(0, 2) == 0) {
+						if (getRandom(0, 101)%2 == 0) {
 							auxDynField[i + difI][j] += 1;
-							//std::cout << i + difI << ", " << j << std::endl;
-						}
-						else {
+						} else {
 							auxDynField[i][j + difI] += 1;
-							//std::cout << i << ", " << j + difI << std::endl;
+							}
 						}
+					passed = false;
+					
 					}
 				}
-			}
+				dynFieldMagn = 0;
+			}		
 		}
 	}
 
-	for (int i = 1; i < x - 1; i++) {
+	for (int i = 0; i < x - 1; i++) {
 		for (int j = 1; j < y - 1; j++) {
 			dynField[i][j] += auxDynField[i][j];
 			auxDynField[i][j] = 0;
 			if (dynField[i][j] < 0) {
 				dynField[i][j] = 0;
 			}
+			if (dynField[i][j] > maxDynVal) {
+				maxDynVal = dynField[i][j];
+			}
 		}
 	}
+	/*std::cout << "----------------------------------------------------------------------------------------" << std::endl;
+	std::cout << "MaxDynValue (just calculated): " << maxDynVal << std::endl;
+	std::cout << "----------------------------------------------------------------------------------------" << std::endl;*/
 	
-	//printDynField();
-
-	/*if (maxDynVal == 0) {
-		std::cout << "Pedestrians are stuck, dynamic field has fully decayed. " << std::endl;
-		exit(400);
-	}*/
 }
 
 /*Checks if the pedestrian is standing at the door and "saves" it. This pedestrian is erased from the pedestrian vector.*/
@@ -355,6 +353,7 @@ void floorPed::isPedSafe(int k) {
 			//pedVec[p].escape = 1;
 			//savedPed++;
 			pedVec.erase(pedVec.begin() + p);
+			dynField[door[k][0]][door[k][1]] += 1;
 		}
 		else {
 			p++;
@@ -430,67 +429,128 @@ void floorPed::calcProbVec(int p) {
 	int i = pedVec[p].position[0];
 	int j = pedVec[p].position[1];
 	double N = 0;
-	std::vector<double> floorValues = { 0,0,0,0,0 };
-	std::vector<int> correctionCells = { 4,3,2,1,0 };
-	double maxFloorValue;
-	int randomInt = getRandom(0, 5);
+	//std::vector<double> floorValues = { 0,0,0,0,0 };
+	//std::vector<int> correctionCells = { 4,3,2,1,0 };
+	double maxFloorValueD = kD*maxDynVal;
+	double maxFloorValueS = kS*maxStatVal;
+	//std::cout << "Maximum floor value of kd floor part: " << maxFloorValueD << std::endl;
+	//std::cout << "Maximum floor value of ks floor part: " << maxFloorValueS << " (Should be the same always)" << std::endl;
+	//double totFloorValue = 0;
+	//int randomInt = getRandom(0, 5);
 
-	floorValues[0] = kD * dynField[i - 1][j] + kS * statField[i - 1][j];
-	floorValues[1] = kD * dynField[i][j - 1] + kS * statField[i][j - 1];
-	floorValues[2] = kD * dynField[i][j] + kS * statField[i][j];
-	floorValues[3] = kD * dynField[i][j + 1] + kS * statField[i][j + 1];
-	floorValues[4] = kD * dynField[i + 1][j] + kS * statField[i + 1][j];
+	/*floorValues[0] = kS * statField[i - 1][j] + kD * dynField[i - 1][j];
+	floorValues[1] = kS * statField[i][j-1] + kD * dynField[i][j-1];
+	floorValues[2] = kS * statField[i][j] + kD * dynField[i][j];
+	floorValues[3] = kS * statField[i][j+1] + kD * dynField[i][j+1];
+	floorValues[4] = kS * statField[i +1][j] + kD * dynField[i +1][j];*/
 
-	maxFloorValue = floorValues[randomInt];
+	//maxFloorValue = floorValues[randomInt];
 
-	for (int i = 0; i < floorValues.size(); i++) {
+	/*for (int i = 0; i < floorValues.size(); i++) {
+		//totFloorValue += floorValues[i];
 		if (floorValues[i] > maxFloorValue) {
 			maxFloorValue = floorValues[i];
 		}
-	}
+	}*/
 
-	//double N = 0;
 	//std::cout << "pedVec without normalizing " << std::endl;
-	double n = probFunction(i - 1, j, maxFloorValue);
-	double w = probFunction(i, j - 1, maxFloorValue);
+	/*double n = probFunctionTwoMaxVal(i - 1, j, maxFloorValueS, maxFloorValueD);
+	double w = probFunctionTwoMaxVal(i, j - 1, maxFloorValueS,maxFloorValueD);
 	occupied[i][j] = 0; // This is done so that the probability can be calculated as if the cell wasnt occupied 
-	double c = probFunction(i, j, maxFloorValue);
+	double c = probFunctionTwoMaxVal(i, j, maxFloorValueS, maxFloorValueD);
 	occupied[i][j] = 1;
-	double e = probFunction(i, j + 1, maxFloorValue);
-	double s = probFunction(i + 1, j, maxFloorValue);
+	double e = probFunctionTwoMaxVal(i, j + 1, maxFloorValueS, maxFloorValueD);
+	double s = probFunctionTwoMaxVal(i + 1, j, maxFloorValueS, maxFloorValueD);*/
+	//std::cout << "-----------------------" << std::endl;
+	//std::cout << "Pedestrian number: " << p << std::endl;
 
-	/*std::cout << "Pedestrian number: " << p << std::endl;
-	std::cout << correctionCells[pedVec[p].desiredDirection] << std::endl;
-	std::cout << "Before correction: " << std::endl;
-	std::cout << n << ", " << w << ", " << c << ", " << e << ", " << s << std::endl;*/
+	//std::cout << "North" << std::endl;
+	double n = probFunctionTwoMaxVal(i - 1, j,maxFloorValueS,maxFloorValueD);
+	//std::cout << "West" << std::endl;
+	double w = probFunctionTwoMaxVal(i, j - 1, maxFloorValueS, maxFloorValueD);
+	//std::cout << "Center" << std::endl;
+	occupied[i][j] = 0; // This is done so that the probability can be calculated as if the cell wasnt occupied 
+	double c = probFunctionTwoMaxVal(i, j, maxFloorValueS, maxFloorValueD);
+	occupied[i][j] = 1;
+	//std::cout << "East" << std::endl;
+	double e = probFunctionTwoMaxVal(i, j + 1, maxFloorValueS, maxFloorValueD);
+	//std::cout << "South" << std::endl;
+	double s = probFunctionTwoMaxVal(i + 1, j, maxFloorValueS, maxFloorValueD);
 
+	if (p == 0) {
+		std::ofstream tempFile;
+		tempFile.open("probabilityFunctionInfo.txt", std::ofstream::app);
+		tempFile << "---------------------------------------------------" << std::endl;
+		tempFile << "Before correction, before normalization" << std::endl;
+		tempFile << n << ", " << w << ", " << c << ", " << e << ", " << s << std::endl;
+		tempFile.close();
+	}
+	//std::cout << correctionCells[pedVec[p].desiredDirection] << std::endl;
+	//std::cout << "Before correction: " << std::endl;
+	//std::cout << n << ", " << w << ", " << c << ", " << e << ", " << s << std::endl;
+
+	/*switch (correctionCells[pedVec[p].desiredDirection])
+	{
+	case 0:
+		n = probFunctionTwoMaxValCorrection(i - 1, j, maxFloorValueS, maxFloorValueD);
+		break;
+	case 1:
+		w = probFunctionTwoMaxValCorrection(i, j - 1, maxFloorValueS, maxFloorValueD);
+		break;
+	case 3:
+		e = probFunctionTwoMaxValCorrection(i, j + 1, maxFloorValueS, maxFloorValueD);
+		break;
+	case 4:
+		s = probFunctionTwoMaxValCorrection(i + 1, j, maxFloorValueS, maxFloorValueD);
+		break;
+	default:
+		break;
+	}*/
 	switch (correctionCells[pedVec[p].desiredDirection])
 	{
 	case 0:
-		n = probFunctionCorrection(i - 1, j, maxFloorValue);
+		n = probFunctionTwoMaxValCorrection(i - 1, j, maxFloorValueS, maxFloorValueD);
 		break;
 	case 1:
-		w = probFunctionCorrection(i, j - 1, maxFloorValue);
+		w = probFunctionTwoMaxValCorrection(i, j - 1, maxFloorValueS, maxFloorValueD);
+		break;
 	case 3:
-		e = probFunctionCorrection(i, j + 1, maxFloorValue);
+		e = probFunctionTwoMaxValCorrection(i, j + 1, maxFloorValueS, maxFloorValueD);
 		break;
 	case 4:
-		s = probFunctionCorrection(i + 1, j, maxFloorValue);
+		s = probFunctionTwoMaxValCorrection(i + 1, j, maxFloorValueS, maxFloorValueD);
 		break;
 	default:
 		break;
 	}
+	if (p == 0) {
+		std::ofstream tempFile;
+		tempFile.open("probabilityFunctionInfo.txt", std::ofstream::app);
+		tempFile << "After correction, before normalization" << std::endl;
+		tempFile << n << ", " << w << ", " << c << ", " << e << ", " << s << std::endl;
+		tempFile.close();
+	}
+	//std::cout << "-----------------------" << std::endl;
+	//std::cout << "Pedestrian number: " << p << std::endl;
+	//std::cout << "After correction: " << std::endl;
+	//std::cout << n << ", " << w << ", " << c << ", " << e << ", " << s << std::endl;
+	/*std::cout << expFunction(i - 1, j) << std::endl;
+	std::cout << "statField: " << statField[i - 1][j] << std::endl;
+	std::cout << "dynField: " << dynField[i - 1][j] << std::endl;
+	std::cout << "occupied: " << occupied[i - 1][j] << std::endl;
+	std::cout << "obstacle: " << obstacle[i - 1][j] << std::endl;*/
 
-	/*std::cout << "-----------------------" << std::endl;
-	std::cout << "Pedestrian number: " << p << std::endl;
-	std::cout << "After correction: " << std::endl;
-	std::cout << n << ", " << w << ", " << c << ", " << e << ", " << s << std::endl;
-	//std::cout << expFunction(i - 1, j) << std::endl;
-	//std::cout << "statField: " << statField[i - 1][j] << std::endl;
-	//std::cout << "dynField: " << dynField[i - 1][j] << std::endl;
-	//std::cout << "occupied: " << occupied[i - 1][j] << std::endl;
-	//std::cout << "obstacle: " << obstacle[i - 1][j] << std::endl;*/
 	N =1/( n + w + c + e + s);
+
+	/*if (isinf(N) || isnan(N)) {
+		std::cout << "n: " << n << ",w: " << w << ",c: " << c << ",e: " << e << ",s: " << s << std::endl;
+		std::cout << "maxFloorValues: " << maxFloorValue << std::endl;
+		std::cout << "North: Dynamic Part: " << kD * dynField[i - 1][j] << " Static Part: " << kS * statField[i - 1][j] << std::endl;
+		std::cout << "West: Dynamic Part: " << kD * dynField[i][j-1] << " Static Part: " << kS * statField[i][j-1] << std::endl;
+		std::cout << "Center: Dynamic Part: " << kD * dynField[i][j] << " Static Part: " << kS * statField[i][j] << std::endl;
+		std::cout << "East: Dynamic Part: " << kD * dynField[i][j+1] << " Static Part: " << kS * statField[i][j+1] << std::endl;
+		std::cout << "South: Dynamic Part: " << kD * dynField[i+1][j] << " Static Part: " << kS * statField[i+1][j] << std::endl;
+	}*/
 	
 	pedVec[p].probVec[0] = N*n;
 	pedVec[p].probVec[1] = N*w;
@@ -498,7 +558,17 @@ void floorPed::calcProbVec(int p) {
 	pedVec[p].probVec[3] = N*e;
 	pedVec[p].probVec[4] = N*s;
 
-	/*std::cout << pedVec[p].probVec[0] << ", "
+	if (p == 0) {
+		std::ofstream tempFile;
+		tempFile.open("probabilityFunctionInfo.txt", std::ofstream::app);
+		tempFile << "After correction, after normalization" << std::endl;
+		tempFile << pedVec[p].probVec[0] << ", " << pedVec[p].probVec[1] << ", " << pedVec[p].probVec[2] << ", " << pedVec[p].probVec[3] << ", " << pedVec[p].probVec[4] << std::endl;
+		tempFile << "---------------------------------------------------" << std::endl;
+		tempFile.close();
+	}
+
+	/*std::cout << "-----------------------" << std::endl;
+	std::cout << pedVec[p].probVec[0] << ", "
 		<< pedVec[p].probVec[1] << ", "
 		<< pedVec[p].probVec[2] << ", "
 		<< pedVec[p].probVec[3] << ", "
@@ -512,7 +582,7 @@ void floorPed::NEWcalcProbVec(int p) {
 	int j = pedVec[p].position[1];
 
 	double N = 0;
-	//std::cout << "pedVec without normalizing " << std::endl;
+	std::cout << "pedVec without normalizing " << std::endl;
 	double n = NEWexpFunction(i - 1, j, p);
 	double w = NEWexpFunction(i, j - 1, p);
 	double c = 1;
@@ -520,7 +590,7 @@ void floorPed::NEWcalcProbVec(int p) {
 	double s = NEWexpFunction(i + 1, j, p);
 
 
-	//std::cout << n << ", " << w << ", " << c << ", " << e << ", " << s << std::endl;
+	std::cout << "N: " << n << ", " << "W: " << w << ", " << "C: " << c << ", " << "E: " << e << ", "<< "S: " << s << std::endl;
 
 	N = 1 / (n + w + c + e + s);
 
@@ -557,13 +627,6 @@ void floorPed::pedDecideDiag() {
 Newest and best function.*/
 void floorPed::pedDecideVect() {
 	for (int p = 0; p < pedVec.size(); p++) {
-		/*if (pedVec[p].position[0] == 0 || pedVec[p].position[1] == 0) {
-			std::cout << p << std::endl;
-			std::cout << pedVec[p].probMax << std::endl;
-			std::cout << pedVec[p].desiredMove[0] << ", " << pedVec[p].desiredMove[1] << std::endl;
-			std::cout << "Crashed" << std::endl;
-		}*/
-		//std::cout << "-----------------" << p << "-----------------" << std::endl;
 		calcProbVec(p);
 		pedVec[p].chooseMoveVec();
 	}
@@ -612,13 +675,17 @@ void floorPed::newFindNResolveConflicts() {
 	int maxPed = 0;
 	int it = 0;
 	int jt = 0;
+	//int randPed = -1;
 	//std::vector <int> tempPosition;
 	for (int k = 0; k < conflictVec.size(); k++) {
 		if (conflictVec.at(k).size() > 0) {
 			for (int p = 0; p < conflictVec.at(k).size(); p++) {
+				//std::cout << "Conflict vect: " << k << " has these many ped: " << conflictVec.at(k).size() << std::endl;
+				//randPed = getRandom(0, conflictVec.at(k).size() + 1);
+				//maxProb = conflictVec.at(k).at(randPed)->probMax;
 				if (conflictVec.at(k).at(p)->probMax >= maxProb) {
 					if (conflictVec.at(k).at(p)->probMax == maxProb){
-						if(getRandom(0,2) == 0){
+						if(getRandom(0,101)%2 == 0){
 							maxPed = p;
 							maxProb = conflictVec.at(k).at(p)->probMax;
 						}
@@ -632,7 +699,6 @@ void floorPed::newFindNResolveConflicts() {
 				//std::cout << "Pedestrian has dropped a crumble to position" << conflictVec.at(k).at(maxPed)->position[0] << ", " << conflictVec.at(k).at(maxPed)->position[1] << std::endl;
 				dynField[conflictVec.at(k).at(maxPed)->position[0]][conflictVec.at(k).at(maxPed)->position[1]] += 1;
 			}
-			//tempPosition = conflictVec.at(k).at(maxPed)->position;
 			occupied.at(conflictVec.at(k).at(maxPed)->position[0]).at(conflictVec.at(k).at(maxPed)->position[1]) = 0;
 			conflictVec.at(k).at(maxPed)->position = conflictVec.at(k).at(maxPed)->desiredMove;
 			occupied.at(conflictVec.at(k).at(maxPed)->position[0]).at(conflictVec.at(k).at(maxPed)->position[1]) = 1;
@@ -672,8 +738,7 @@ double floorPed::expFunction(int i, int j) {
 	std::cout << (obstacle[i][j]) << std::endl;
 
 	std::cout << "-------------" << std::endl;*/
-	double value = (exp(kD * (dynField[i][j]))) *
-		(exp(kS * statField[i][j])) * (1 - occupied[i][j]) * (obstacle[i][j]);
+	//double value = (exp(kD * (dynField[i][j]))) * (exp(kS * statField[i][j])) * (1 - occupied[i][j]) * (obstacle[i][j]);
 
 	/*if (isnan(value) || isinf(value)) {
 		std::cout << "Total: " << (exp(kD * (dynField[i][j]))) *
@@ -684,13 +749,33 @@ double floorPed::expFunction(int i, int j) {
 
 }
 
+/*Exponential function that is the basis for calculating the probability matrix DEPRECATED*/
+double floorPed::expFunctionCorrection(int i, int j) {
+
+	return exp(kD * (dynField[i][j]-1)) * exp(kS * statField[i][j]) * (1 - occupied[i][j]) * obstacle[i][j];
+
+}
+
 /*New exponential function which will not throw NaN when the static field value is too high.*/
 double floorPed::expFunction(int i, int j, int p) {
 
 	int x = pedVec[p].position[0];
 	int y = pedVec[p].position[1];
+	//std::cout << "Dynamic Part: " << kD * (dynField[i][j] - dynField[x][y]) << ", " << exp(kD * (dynField[i][j] - dynField[x][y])) << std::endl;;
+	//std::cout << "Static Part: " << kS * (statField[i][j] - statField[x][y]) << ", " << exp(kS * (statField[i][j] - statField[x][y])) << std::endl;
 
-	return (exp(kD * (dynField[i][j] - dynField[x][y]))) *
+	return (exp(kD * (dynField[x][y] - dynField[i][j]))) *
+		(exp(kS * (statField[i][j] - statField[x][y]))) * ((1 - occupied[i][j])) * (obstacle[i][j]);
+
+}
+
+/*New exponential function which will not throw NaN when the static field value is too high.*/
+double floorPed::expFunctionCorrection(int i, int j, int p) {
+
+	int x = pedVec[p].position[0];
+	int y = pedVec[p].position[1];
+
+	return (exp(kD * (dynField[i][j] - dynField[x][y] - 1))) *
 		(exp(kS * (statField[i][j] - statField[x][y]))) * ((1 - occupied[i][j])) * (obstacle[i][j]);
 
 }
@@ -731,6 +816,38 @@ double floorPed::NEWexpFunction(int i, int j, int p) {
 double floorPed::probFunction(int i, int j, double maxFloorValues) {
 
 	/*if (i == 0 || j == 0) {
+		if ((isinf((kD * dynField.at(i).at(j)) + (kS * statField.at(i).at(j))) * (1 - occupied.at(i).at(j)) * (obstacle.at(i).at(j)))) {
+			std::cout << "---------------------------------" << std::endl;
+			std::cout << "i: " << i << ", j: " << j << std::endl;
+			std::cout << "dynField: " << dynField[i][j] << std::endl;
+			std::cout << "statField: " << statField[i][j] << std::endl;
+			std::cout << "occupied: " << occupied[i][j] << std::endl;
+			std::cout << "obstacle: " << obstacle[i][j] << std::endl;
+			std::cout << "occupied = 1 or obstacle = 0 always" << std::endl;
+			//std::cout << (kD * dynField.at(i).at(j)) + (kS * statField.at(i).at(j)) * (1 - occupied.at(i).at(j)) * (obstacle.at(i).at(j)) << std::endl;
+		}
+	}*/
+	
+	
+	/*std::cout << "i: " << i << ", j: " << j << std::endl;
+	std::cout << "dynField: " << dynField[i][j] << std::endl;
+	std::cout << "statField: " << statField[i][j] << std::endl;
+	std::cout << "occupied: " << occupied[i][j] << std::endl;
+	std::cout << "obstacle: " << obstacle[i][j] << std::endl;
+	std::cout << "---------------------------------------" << std::endl;*/
+	//return exp(kD * dynField[i][j]) * exp(kS * statField[i][j]) * (1 - occupied[i][j]) * obstacle[i][j]; ORIGINAL FUNCTION NO CORRECTION
+	// kD * dynField + kS*statField -> exp(kD * dynField + kS*statField) = exp(kd*dynField)*exp(ks*statField)
+	//(exp(kd*DynField-maxDynField) * exp(ks*statField-maxStatField) = exp(kd*DynField
+	return exp(kD * dynField[i][j] + kS * statField[i][j] - maxFloorValues) * (1 - occupied[i][j]) * (obstacle[i][j]);
+}
+
+double floorPed::probFunctionCorrection(int i, int j, double maxFloorValues) {
+	return (exp(((kD * (dynField[i][j]-1)) + (kS * statField[i][j])) - maxFloorValues)) * (1 - occupied[i][j]) * (obstacle[i][j]);
+}
+
+double floorPed::probFunctionTwoMaxVal(int i, int j, double maxFloorValuesS, double maxFloorValueD) {
+
+	/*if (i == 0 || j == 0) {
 		if (((kD * dynField.at(i).at(j)) + (kS * statField.at(i).at(j))) * (1 - occupied.at(i).at(j)) * (obstacle.at(i).at(j)) != 0) {
 			std::cout << "--------" << std::endl;
 			std::cout << "i: " << i << ", j: " << j << std::endl;
@@ -751,12 +868,33 @@ double floorPed::probFunction(int i, int j, double maxFloorValues) {
 		std::cout << "occupied: " << occupied[i][j] << std::endl;
 		std::cout << "obstacle: " << obstacle[i][j] << std::endl;*/
 	
-	return (exp( ((kD * dynField[i][j]) + (kS * statField[i][j])) - maxFloorValues)) * (1 - occupied[i][j]) * (obstacle[i][j]);
+	return exp(kD * dynField[i][j] - maxFloorValueD)*exp(kS * statField[i][j] - maxFloorValuesS) * (1 - occupied[i][j]) * (obstacle[i][j]);
 }
 
-double floorPed::probFunctionCorrection(int i, int j, double maxFloorValues) {
-	return (exp(((kD * dynField[i][j]) + (kS * statField[i][j])) - maxFloorValues)) * (1 - occupied[i][j]) * (obstacle[i][j]) 
-		* exp(-kD * dynField[i][j]);
+double floorPed::probFunctionTwoMaxValCorrection(int i, int j, double maxFloorValuesS, double maxFloorValueD) {
+
+	/*if (i == 0 || j == 0) {
+		if (((kD * dynField.at(i).at(j)) + (kS * statField.at(i).at(j))) * (1 - occupied.at(i).at(j)) * (obstacle.at(i).at(j)) != 0) {
+			std::cout << "--------" << std::endl;
+			std::cout << "i: " << i << ", j: " << j << std::endl;
+			std::cout << "dynField: " << dynField[i][j] << std::endl;
+			std::cout << "statField: " << statField[i][j] << std::endl;
+			std::cout << "occupied: " << occupied[i][j] << std::endl;
+			std::cout << "obstacle: " << obstacle[i][j] << std::endl;
+			std::cout << "occupied = 1 or obstacle = 0 always" << std::endl;
+			std::cout << (kD * dynField.at(i).at(j)) + (kS * statField.at(i).at(j)) * (1 - occupied.at(i).at(j)) * (obstacle.at(i).at(j)) << std::endl;
+		}
+
+	}*/
+
+	/*
+		std::cout << "i: " << i << ", j: " << j << std::endl;
+		std::cout << "dynField: " << dynField[i][j] << std::endl;
+		std::cout << "statField: " << statField[i][j] << std::endl;
+		std::cout << "occupied: " << occupied[i][j] << std::endl;
+		std::cout << "obstacle: " << obstacle[i][j] << std::endl;*/
+
+	return exp(kD * (dynField[i][j]-1) - maxFloorValueD) * exp(kS * statField[i][j] - maxFloorValuesS) * (1 - occupied[i][j]) * (obstacle[i][j]);
 }
 
 /*------------------------------------------------------------------------------------------------------------------------------------------------------------*/
@@ -952,9 +1090,10 @@ void floorPed::testRun() {
 		isPedSafe(k);
 	}
 
-	/*printMovements();
-	printDynField();
-	std::cout << "------------Finished iteration-------------" << std::endl;*/
+	maxDynVal = 0;
+	//printMovements();
+	//printDynField();
+	//std::cout << "------------Finished iteration-------------" << std::endl;
 }
 
 /*New testRun now using the new probability vectors and efficient conflict solving. WIP
@@ -1016,7 +1155,9 @@ void floorPed::resetFloor(int p) {
 Reseting the dynamic field to 0
 Filling up the floor with rho density*/
 void floorPed::resetFloor(double rho) {
+	erasePed();
 	resetDynField();
+	resetOccupied();
 	densityPed(rho);
 }
 
@@ -1219,6 +1360,11 @@ void floorPed::changeSize(int _x, int _y) {
 /*Accesses and overwrites the value kD of the room*/
 void floorPed::changeKD(double _kD) {
 	kD = _kD;
+}
+
+/*Accesses and overwrites the value kD of the room*/
+double floorPed::getKD() {
+	return kD;
 }
 
 /*Accesses and overwrites the value kS of the room*/

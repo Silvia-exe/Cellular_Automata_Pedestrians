@@ -28,6 +28,8 @@ class floorPed {
 	std::vector<std::vector<std::vector<double>>> statFieldVect; //Vector which holds the static field for every door
 	std::vector<pedestrian> pedVec; //Vector which holds all pedestrians in the Floor
 
+	std::vector<int> correctionCells = { 4,3,2,1,0 };
+
 	std::vector<std::vector<pedestrian*>> conflictVec;
 
 	/*It is noted that for x and y sizes of the room, the number of cells which the pedestrians can move is not xy but
@@ -41,8 +43,9 @@ class floorPed {
 	double alpha; //Diffuse factor for the Dynamic Field
 	double beta; //Decay factor for Dynamic Field
 	double maxDynVal; //Maximum value of the Dynamic Field at an iteration
+	double maxStatVal; //Maximum value of Static Field. Does not change in a simulation.
 	std::vector<std::vector<int>> door; //Vector which holds doors (vectors with x and y coordinates)
-	std::vector<double> d_L; //Holds the cell furthest away from every door
+	std::vector<double> d_L; //Holds the distance of the cell furthest away from every door
 
 	int pedGroup1; //Counts the number of pedestrians to hold the first combination of parameters.
 	int pedGroup2; //Counts the number of pedestrians to hold the second combination of parameters.
@@ -56,7 +59,8 @@ class floorPed {
 		alpha = alpha_;
 		beta = beta_;
 		door = door_;
-		maxDynVal = 1;
+		maxDynVal = 0;
+		maxStatVal = 0;
 
 		pedGroup1 = 0;
 		pedGroup2 = 0;
@@ -70,12 +74,16 @@ class floorPed {
 private:
 
 	double expFunction(int i, int j);
+	double expFunctionCorrection(int i, int j);
 	double expFunction(int i, int j, int p);
+	double expFunctionCorrection(int i, int j, int p);
 	double expFunctionNorm(int i, int j);
 	double NEWexpFunction(int i, int j, int p);
 
 	double probFunction(int i, int j, double maxFloorValues);
 	double probFunctionCorrection(int i, int j, double maxFloorValues);
+	double probFunctionTwoMaxVal(int i, int j, double maxFloorValuesS, double maxFloorValueD);
+	double probFunctionTwoMaxValCorrection(int i, int j, double maxFloorValuesS, double maxFloorValueD);
 
 	void initMat();
 	void initConflictVec();
@@ -151,6 +159,7 @@ public:
 	void changeKD(double _kD);
 	void changeKS(double _kS);
 	void printKs();
+	double getKD();
 
 	void changeAlpha(double _alpha);
 	void changeBeta(double _beta);
