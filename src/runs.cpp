@@ -7,7 +7,7 @@
 /*Creates subfolders in the main project folder, subfolders will be created in the order they are in the vector
 Returns the final path to the files for easy access*/
 std::string createDir(std::vector<std::string> directories) {
-	std::string hardDirec = "C:/Users/Silvia/source/repos/cellularAutomataNewVer/cellularAutomataNewVer/";
+	std::string hardDirec = "C:/Users/Silvia/source/repos/CellularAutomataPedestrians/CellularAutomataPedestrians";
 	std::string tempDirec = hardDirec;
 	for (int i = 0; i < directories.size(); i++) {
 		if (i != directories.size()) {

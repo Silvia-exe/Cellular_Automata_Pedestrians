@@ -1,3 +1,5 @@
+#define DOOR_IN_WALL
+
 #include "stdafx.h"
 #include "floorPed.h"
 
@@ -290,41 +292,86 @@ If it decays, it will also decide if it diffuses or not*/
 void floorPed::dynamicDecay() {
 	int difI;
 	bool passed = false;
-	int dynFieldMagn = 0;
 
-	for (int i = 0; i < x-1; i++) {
+
+	
+	//TODO: Fix coordinate system
+	/*Runs the dynamic decay for all cells in the floor. 
+	Will not run on walls to avoid bleeding of the dynamic field in walls cells to the floor cells.
+	Since it will not run on walls, it is probable it wont run on doors.*/
+	for (int i = 1; i < x-1; i++) {
 		for (int j = 1; j < y-1; j++) {
-			if (dynField[i][j] != 0) {
-				dynFieldMagn = dynField[i][j];
-				for (int k = 0; k < dynFieldMagn; k++) {
-					if (getRandom01() <= beta) {
-						auxDynField[i][j] -= 1;
-					}else{
-					if (getRandom01() <= alpha) {
-						//auxDynField[i][j] -= 1;
-						difI = 1 + getRandom(0, 2) * (-2);
-						//std::cout << difI << std::endl;
-						while (passed == false) {
-							if (i + difI < 0 || i + difI > x || j + difI < 0 || j + difI > y) {
-								difI = 1 + getRandom(0, 2) * (-2);
-							} else {
-							passed = true;
-							}
-						}
-						if (getRandom(0, 101)%2 == 0) {
-							auxDynField[i + difI][j] += 1;
-						} else {
-							auxDynField[i][j + difI] += 1;
-							}
-						}
-					passed = false;
-					
-					}
+			if (dynField[i][j] != 0) 
+			{
+				if (getRandom01() <= beta) {
+					auxDynField[i][j] -= 1;
 				}
-				dynFieldMagn = 0;
+				else{
+				if (getRandom01() <= alpha) {
+					auxDynField[i][j] -= 1;
+					difI = 1 + getRandom(0, 2) * (-2);
+					//std::cout << difI << std::endl;
+					/*while(passed == false) {
+						if (i + difI < 0 || i + difI >= x || j + difI < 0 || j + difI >= y) {
+							difI = 1 + getRandom(0, 2) * (-2);
+						} else {
+						passed = true;
+						}
+					}*/
+					if (getRandom(0, 101)%2 == 0) {
+						auxDynField[i + difI][j] += 1;
+					} 
+					else {
+						auxDynField[i][j + difI] += 1;
+						}
+					}
+					passed = false;
+				}
 			}		
 		}
 	}
+
+#ifdef DOOR_IN_WALL
+	int i = 0;
+	int j = 0;
+	
+	for (int k = 0; k < door.size(); k++) {
+		i = door[k][0];
+		j = door[k][1];
+		if (dynField[i][j] != 0)
+			
+		{
+			if (getRandom01() <= beta) {
+				auxDynField[i][j] -= 1;
+				
+			}
+			else {
+				if (getRandom01() <= alpha) {
+					auxDynField[i][j] -= 1;
+				
+					difI = 1 + getRandom(0, 2) * (-2);
+					//std::cout << difI << std::endl;
+					while (passed == false) {
+						if (i + difI < 0 || i + difI >= x || j + difI < 0 || j + difI >= y) {
+							difI = 1 + getRandom(0, 2) * (-2);
+						}
+						else {
+							passed = true;
+						}
+					}
+					if (getRandom(0, 101) % 2 == 0) {
+						auxDynField[i + difI][j] += 1;
+					}
+					else {
+						auxDynField[i][j + difI] += 1;
+					}
+				}
+				passed = false;
+			}
+		}
+	}
+#endif
+
 
 	for (int i = 0; i < x - 1; i++) {
 		for (int j = 1; j < y - 1; j++) {
@@ -344,7 +391,8 @@ void floorPed::dynamicDecay() {
 	
 }
 
-/*Checks if the pedestrian is standing at the door and "saves" it. This pedestrian is erased from the pedestrian vector.*/
+/*Checks if the pedestrian is standing at the door and "saves" it. This pedestrian is erased from the pedestrian vector.
+k refers to the door id.*/
 void floorPed::isPedSafe(int k) {
 	for (int p = 0; p < pedVec.size();) {
 		if (pedVec[p].position == door[k]) {
@@ -424,7 +472,8 @@ void floorPed::calcProbMatDiag(int p) {
 }
 
 /*Alternative to calcProbMat. The probability matrix is linearized and has 5 members,
-one for each direction the pedestrian will move. It ignores diagonals, and so follows the von Neumman neighborhood*/
+one for each direction the pedestrian will move. It ignores diagonals, and so follows the von Neumman neighborhood
+p is the ID of the pedestrian*/
 void floorPed::calcProbVec(int p) {
 	int i = pedVec[p].position[0];
 	int j = pedVec[p].position[1];
@@ -465,7 +514,7 @@ void floorPed::calcProbVec(int p) {
 	//std::cout << "Pedestrian number: " << p << std::endl;
 
 	//std::cout << "North" << std::endl;
-	double n = probFunctionTwoMaxVal(i - 1, j,maxFloorValueS,maxFloorValueD);
+	double n = probFunctionTwoMaxVal(i - 1, j, maxFloorValueS, maxFloorValueD);
 	//std::cout << "West" << std::endl;
 	double w = probFunctionTwoMaxVal(i, j - 1, maxFloorValueS, maxFloorValueD);
 	//std::cout << "Center" << std::endl;
@@ -477,35 +526,7 @@ void floorPed::calcProbVec(int p) {
 	//std::cout << "South" << std::endl;
 	double s = probFunctionTwoMaxVal(i + 1, j, maxFloorValueS, maxFloorValueD);
 
-	if (p == 0) {
-		std::ofstream tempFile;
-		tempFile.open("probabilityFunctionInfo.txt", std::ofstream::app);
-		tempFile << "---------------------------------------------------" << std::endl;
-		tempFile << "Before correction, before normalization" << std::endl;
-		tempFile << n << ", " << w << ", " << c << ", " << e << ", " << s << std::endl;
-		tempFile.close();
-	}
-	//std::cout << correctionCells[pedVec[p].desiredDirection] << std::endl;
-	//std::cout << "Before correction: " << std::endl;
-	//std::cout << n << ", " << w << ", " << c << ", " << e << ", " << s << std::endl;
-
-	/*switch (correctionCells[pedVec[p].desiredDirection])
-	{
-	case 0:
-		n = probFunctionTwoMaxValCorrection(i - 1, j, maxFloorValueS, maxFloorValueD);
-		break;
-	case 1:
-		w = probFunctionTwoMaxValCorrection(i, j - 1, maxFloorValueS, maxFloorValueD);
-		break;
-	case 3:
-		e = probFunctionTwoMaxValCorrection(i, j + 1, maxFloorValueS, maxFloorValueD);
-		break;
-	case 4:
-		s = probFunctionTwoMaxValCorrection(i + 1, j, maxFloorValueS, maxFloorValueD);
-		break;
-	default:
-		break;
-	}*/
+	
 	switch (correctionCells[pedVec[p].desiredDirection])
 	{
 	case 0:
@@ -567,14 +588,7 @@ void floorPed::calcProbVec(int p) {
 		tempFile.close();
 	}
 
-	/*std::cout << "-----------------------" << std::endl;
-	std::cout << pedVec[p].probVec[0] << ", "
-		<< pedVec[p].probVec[1] << ", "
-		<< pedVec[p].probVec[2] << ", "
-		<< pedVec[p].probVec[3] << ", "
-		<< pedVec[p].probVec[4] << std::endl;
-
-	std::cout << "-----------------------" << std::endl;*/
+	
 }
 
 void floorPed::NEWcalcProbVec(int p) {
@@ -602,7 +616,7 @@ void floorPed::NEWcalcProbVec(int p) {
 
 }
 
-/*All pedestrians calculate their probability matrix, and from there they will choose which cell they will move to.*/
+/*All pedestrians calculate their probability matrix, and from there they will choose which cell they will move to. DEPRECATED*/
 void floorPed::pedDecide() {
 	for (int p = 0; p < pedVec.size(); p++) {
 		if (pedVec[p].escape == 0) {
@@ -613,7 +627,7 @@ void floorPed::pedDecide() {
 }
 
 /*All pedestrians calculate their probability matrix, and from there they will choose which cell they will move to.
-Takes into consideration diagonals*/
+Takes into consideration diagonals. DEPRECATED*/
 void floorPed::pedDecideDiag() {
 	for (int p = 0; p < pedVec.size(); p++) {
 		if (pedVec[p].escape == 0) {
@@ -1068,7 +1082,6 @@ void floorPed::singleRunDynFieldMoore() {
 Will be changed from testRun to finalRun, since this is the most updated version of the individual run.*/
 void floorPed::testRun() {
 	//std::cout << "------------Starting iteration-------------" << std::endl;
-	//printMovements();
 	/*The dynamic field is updated with the decay and difussion dynamics.*/
 	dynamicDecay();
 

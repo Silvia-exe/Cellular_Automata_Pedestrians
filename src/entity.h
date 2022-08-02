@@ -1,4 +1,6 @@
+#ifdef USE_ALLEGRO
 #include<allegro5/allegro.h>
+
 
 struct entity
 {
@@ -17,3 +19,4 @@ struct entity
 		oneTimeUse = true;
 	}
 };
+#endif

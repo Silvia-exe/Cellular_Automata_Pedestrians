@@ -1,3 +1,4 @@
+#ifdef USE_ALLEGRO
 #include "graphicsHandler.h"
 
 void graphicsHandler::initializeGrid()
@@ -60,3 +61,4 @@ void graphicsHandler::drawTheGrid()
 	al_set_target_bitmap(DISPLAY_BITMAP);
 	al_draw_bitmap(screenBuffor, 0, 0, 0);
 }
+#endif

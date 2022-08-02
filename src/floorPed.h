@@ -100,7 +100,7 @@ private:
 	void calcProbVec(int p);
 	void NEWcalcProbVec(int p);
 
-	void isPedSafe(int p);
+	void isPedSafe(int k);
 	void clearPed(int p);
 	void resetSavedPed(int p);
 	void pedDecide();

@@ -1,9 +1,11 @@
 #pragma once
-
+#ifdef USE_ALLEGRO
 #include <vector>
+
 
 #include <allegro5/allegro.h>
 #include <allegro5/allegro_primitives.h>
+
 
 #include <iostream>
 
@@ -22,7 +24,9 @@ class graphicsHandler
 
 	vector<vector<entity>> rectangleGrid;
 
+	#ifdef USE_ALLEGRO
 	ALLEGRO_BITMAP* screenBuffor;
+	#endif
 
 	void initializeGrid();
 	void initializeScreenBuffor();
@@ -53,3 +57,4 @@ public:
 
 	void drawTheGrid();
 };
+#endif
