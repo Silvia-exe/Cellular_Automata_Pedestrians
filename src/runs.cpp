@@ -35,7 +35,7 @@ void runDiagNRuns(int p, int n, int x, int y, std::vector<std::vector<int>> door
 
 	if (writeIterations == 1) {
 		for (int i = 0; i < n; i++) {
-			f1.singleRunDiag();
+			
 			f1.writeMovements2File(itFolder + "/iteration" + std::to_string(i));
 		}
 
@@ -44,7 +44,7 @@ void runDiagNRuns(int p, int n, int x, int y, std::vector<std::vector<int>> door
 	}
 	else {
 		for (int i = 0; i < n; i++) {
-			f1.singleRunDiag();
+			
 		}
 		f1.writeMovements2File(path + "/finalPosition");
 	}
@@ -59,7 +59,7 @@ void runDiagNRuns(floorPed f1, int n, std::string path, bool writeIterations){
 
 	if (writeIterations == 1) {
 		for (int i = 0; i < n; i++) {
-			f1.singleRunDynFieldMoore();
+			
 			f1.writeMovements2File(itFolder +"/iteration" + std::to_string(i));
 			f1.writeDynField2File(path + "/dynField"+ std::to_string(i));
 			
@@ -69,7 +69,7 @@ void runDiagNRuns(floorPed f1, int n, std::string path, bool writeIterations){
 	}
 	else {
 		for (int i = 0; i < n; i++) {
-			f1.singleRunDynFieldMoore();
+			
 		}
 		f1.writeMovements2File(path+"/finalPosition");
 	}
@@ -93,7 +93,7 @@ void runDiagAllSavedMoore(int p, int n, int x, int y, std::vector<std::vector<in
 
 	if (writeIterations == 1) {
 		while (f1.numberOfSavedPed() != f1.numberOfPed()) {
-			f1.singleRunDynFieldMoore();
+			
 			it++;
 			f1.writeMovements2File(itFolder + "/iteration" + std::to_string(it));
 		}
@@ -101,7 +101,7 @@ void runDiagAllSavedMoore(int p, int n, int x, int y, std::vector<std::vector<in
 	}
 	else {
 		while (f1.numberOfSavedPed() != f1.numberOfPed()) {
-			f1.singleRunDynFieldMoore();
+			
 			it++;
 		}
 		f1.writeMovements2File(path + "/finalPosition");
@@ -121,7 +121,7 @@ void runDiagAllSavedMoore(floorPed f1, int n,std::string path, bool writeIterati
 
 	if (writeIterations == 1) {
 		while (f1.numberOfSavedPed() != f1.numberOfPed() && it <= n) {
-			f1.singleRunDynFieldMoore();
+			
 			it++;
 			f1.writeMovements2File(itFolder + "/iteration" + std::to_string(it));
 		}
@@ -129,7 +129,7 @@ void runDiagAllSavedMoore(floorPed f1, int n,std::string path, bool writeIterati
 	}
 	else {
 		while (f1.numberOfSavedPed() != f1.numberOfPed() && it <= n) {
-			f1.singleRunDynFieldMoore();
+			
 			it++;
 		}
 		f1.writeMovements2File(path + "/finalPosition");
@@ -152,7 +152,7 @@ void runAllSavedVonNe(floorPed f1, int n, std::string path, bool writeIterations
 
 	if (writeIterations == 1) {
 		while (f1.numberOfSavedPed() != f1.numberOfPed() && it <= n) {
-			f1.singleRunDynFieldVonNe();
+			
 			it++;
 			f1.writeMovements2File(itFolder + "/iteration" + std::to_string(it));
 			f1.writeDynField2File(dynFolder + "/dynIteration" + std::to_string(it));
@@ -161,7 +161,7 @@ void runAllSavedVonNe(floorPed f1, int n, std::string path, bool writeIterations
 	}
 	else {
 		while (f1.numberOfSavedPed() != f1.numberOfPed() && it <= n) {
-			f1.singleRunDynFieldVonNe();
+			
 			it++;
 		}
 		f1.writeMovements2File(path + "/finalPosition");
@@ -183,7 +183,7 @@ void runDiagConstPed(int p, int n, int x, int y, std::vector<std::vector<int>> d
 		floorPed f1 = floorPed(x, y, 1, 0, 0.7, 0.8, doors);
 		f1.ranPed(p);
 		while (f1.numberOfSavedPed() != f1.numberOfPed()) {
-			f1.singleRunDiag();
+			
 			it++;
 		}
 		dataIterations.push_back(it);
@@ -206,7 +206,7 @@ void runDiagConstPed(floorPed f1, int n, std::string fileName, std::string path)
 	for (int i = 0; i < n; i++) {
 		it = 0;
 		while (f1.numberOfSavedPed() != f1.numberOfPed()) {
-			f1.singleRunDiag();
+			
 			it++;
 		}
 		dataIterations.push_back(it);
@@ -235,7 +235,7 @@ void runDiagVarPed(int p, int x, int y, std::vector<std::vector<int>> doors, std
 		floorPed f1 = floorPed(x, y, 1, 0, 0.7, 0.8, doors);
 		f1.ranPed(i);
 		while (f1.numberOfSavedPed() != f1.numberOfPed()) {
-			f1.singleRunDiag();
+			
 			it++;
 		}
 		dataIterations.push_back(it);
@@ -263,7 +263,7 @@ void runDiagVarPed(floorPed f1, int p, std::string fileName, std::string path) {
 		f1.resetFloor(i);
 		it = 0;
 		while (f1.numberOfSavedPed() != f1.numberOfPed()) {
-			f1.singleRunDiag();
+			
 			it++;
 		}
 		dataIterations.push_back(it);
@@ -295,7 +295,7 @@ void runDiagVarPedRho(floorPed f1, double rho, std::string fileName, std::string
 
 		while (f1.numberOfSavedPed() != f1.numberOfPed()) {
 			
-			f1.singleRunDiag();
+			
 			it++;
 		}
 		file << it << "\n";
@@ -329,7 +329,7 @@ void runDiagVarSize(int Xmax, int Ymax, int Xini, int Yini, int p, double kD, do
 			floorPed f1 = floorPed(x, y, kS, kD, alpha, beta, doors);
 			f1.ranPed(p);
 			while (f1.numberOfPed() != f1.numberOfSavedPed() && it <= maxIteration) {
-				f1.singleRunDynFieldMoore();
+				
 				it++;
 			}
 			file << x << ":" << y << ":" << it << "\n";
@@ -357,7 +357,7 @@ void runDiagVarKD(floorPed f1, int n, double kD, std::string fileName, std::stri
 		file << k << ":";
 
 		while (f1.numberOfPed() != f1.numberOfSavedPed() && it <= n) {
-			f1.singleRunDynFieldMoore();
+			
 			it++;
 		}
 		file << it << "\n";
@@ -383,7 +383,7 @@ void runDiagVarAlpha(floorPed f1, int n, double alpha, std::string fileName, std
 		file << a << ":";
 
 		while (f1.numberOfPed() != f1.numberOfSavedPed() && it <= n) {
-			f1.singleRunDynFieldMoore();
+			
 			it++;
 		}
 		file << it << "\n";
@@ -408,7 +408,7 @@ void runDiagVarBeta(floorPed f1, int n, double beta, std::string fileName, std::
 		file << b << ":";
 
 		while (f1.numberOfPed() != f1.numberOfSavedPed() && it <= n) {
-			f1.singleRunDynFieldMoore();
+			
 			it++;
 		}
 		file << it << "\n";

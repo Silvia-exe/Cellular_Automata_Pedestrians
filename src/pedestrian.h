@@ -37,8 +37,8 @@ private:
 	void initProbVec(bool diag = 0);
 
 public:
-	void move();
-	void chooseMove();
+	//void move();
+	//void chooseMove();
 	void chooseMoveVec();
 
 	void returnProbMat();

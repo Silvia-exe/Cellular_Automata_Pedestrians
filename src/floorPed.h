@@ -42,8 +42,6 @@ class floorPed {
 	double kD; //Dynamic sensitivity coefficient
 	double alpha; //Diffuse factor for the Dynamic Field
 	double beta; //Decay factor for Dynamic Field
-	double maxDynVal; //Maximum value of the Dynamic Field at an iteration
-	double maxStatVal; //Maximum value of Static Field. Does not change in a simulation.
 	std::vector<std::vector<int>> door; //Vector which holds doors (vectors with x and y coordinates)
 	std::vector<double> d_L; //Holds the distance of the cell furthest away from every door
 
@@ -59,9 +57,7 @@ class floorPed {
 		alpha = alpha_;
 		beta = beta_;
 		door = door_;
-		maxDynVal = 0;
-		maxStatVal = 0;
-
+	
 		pedGroup1 = 0;
 		pedGroup2 = 0;
 
@@ -82,8 +78,6 @@ private:
 
 	double probFunction(int i, int j, double maxFloorValues);
 	double probFunctionCorrection(int i, int j, double maxFloorValues);
-	double probFunctionTwoMaxVal(int i, int j, double maxFloorValuesS, double maxFloorValueD);
-	double probFunctionTwoMaxValCorrection(int i, int j, double maxFloorValuesS, double maxFloorValueD);
 
 	void initMat();
 	void initConflictVec();
@@ -103,9 +97,7 @@ private:
 	void isPedSafe(int k);
 	void clearPed(int p);
 	void resetSavedPed(int p);
-	void pedDecide();
 	void pedDecideVect();
-	void pedDecideDiag();
 	void NEWPedDecide();
 
 	void fillConflictVect();
@@ -132,12 +124,6 @@ public:
 
 	void NEWdensityPed(double density, double paramDensity, double kD2, double kS2);
 
-	void singleRun();
-	void singleRunAllTogether();
-	void singleRunDiag();
-	void singleRunDynFieldVonNe();
-	void singleRunSave();
-	void singleRunDynFieldMoore();
 	void testRun();
 	void NEWtestRun();
 
