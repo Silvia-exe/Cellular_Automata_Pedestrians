@@ -9,10 +9,10 @@
 #include <numeric>
 #include <chrono>
 #include <ctime>
+#include <random>
 #include "pedestrian.h"
 
 using namespace std::chrono;
-
 
 class floorPed {
 
@@ -41,21 +41,20 @@ class floorPed {
 	double kS; //Static sensitivity coefficient 
 	double kD; //Dynamic sensitivity coefficient
 	double alpha; //Diffuse factor for the Dynamic Field
-	double beta; //Decay factor for Dynamic Field
+	double delta; //Decay factor for Dynamic Field
 	std::vector<std::vector<int>> door; //Vector which holds doors (vectors with x and y coordinates)
 	std::vector<double> d_L; //Holds the distance of the cell furthest away from every door
 
 	int pedGroup1; //Counts the number of pedestrians to hold the first combination of parameters.
 	int pedGroup2; //Counts the number of pedestrians to hold the second combination of parameters.
 
-	void initializeFloor(int x_, int y_, double kS_, double kD_, double alpha_, double beta_, std::vector<std::vector<int>> door_) {
-
+	void initializeFloor(int x_, int y_, double kS_, double kD_, double alpha_, double delta_, std::vector<std::vector<int>> door_) {
 		x = x_;
 		y = y_;
 		kS = kS_;
 		kD = kD_;
 		alpha = alpha_;
-		beta = beta_;
+		delta = delta_;
 		door = door_;
 	
 		pedGroup1 = 0;
@@ -67,15 +66,10 @@ class floorPed {
 		//buildWall(); //Uncomment if you want to have the door(s) "closed"
 	}
 
+
 private:
 
-	double expFunction(int i, int j);
-	double expFunctionCorrection(int i, int j);
-	double expFunction(int i, int j, int p);
-	double expFunctionCorrection(int i, int j, int p);
-	double expFunctionNorm(int i, int j);
 	double NEWexpFunction(int i, int j, int p);
-
 	double probFunction(int i, int j, double maxFloorValues);
 	double probFunctionCorrection(int i, int j, double maxFloorValues);
 
@@ -89,25 +83,19 @@ private:
 	void calcDL();
 	void calcStatF();
 
-	void calcProbMat(int p);
-	void calcProbMatDiag(int p);
 	void calcProbVec(int p);
 	void NEWcalcProbVec(int p);
 
 	void isPedSafe(int k);
 	void clearPed(int p);
-	void resetSavedPed(int p);
 	void pedDecideVect();
 	void NEWPedDecide();
 
 	void fillConflictVect();
 
-	void findNResolveConflicts(int p);
 	void newFindNResolveConflicts();
 
 	void dynamicDecay();
-	void statFieldNorm();
-	void dynFieldNorm();
 
 	void resetDynField();
 	void resetOccupied();
@@ -124,7 +112,7 @@ public:
 
 	void NEWdensityPed(double density, double paramDensity, double kD2, double kS2);
 
-	void testRun();
+	void singleRun();
 	void NEWtestRun();
 
 	void printMovements();
@@ -132,7 +120,6 @@ public:
 	void printDynField();
 
 	int numberOfPed();
-	int numberOfSavedPed();
 
 	void writeMovements2File(std::string fileName);
 	void writeStatField2File(std::string fileName);
@@ -148,10 +135,9 @@ public:
 	double getKD();
 
 	void changeAlpha(double _alpha);
-	void changeBeta(double _beta);
+	void changeDelta(double _delta);
 
 	void resetFloor(int p);
-
 	void resetFloor(double rho);
 
 	floorPed(int x_, int y_, double kS_, double kD_, double alpha_, double beta_, std::vector<std::vector<int>> door_) {

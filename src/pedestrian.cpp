@@ -12,17 +12,6 @@ double randomNumber01(int decimalSpaces, double min = EPSILON) {
 	return floor(((double)randomInt(min * RAND_MAX, RAND_MAX) / RAND_MAX) * pow(10, decimalSpaces)) / pow(10, decimalSpaces);
 }
 
-/*Initiatializes the probability matrix as a 3x3 matrix of zeros*/
-void pedestrian::initProbMat() {
-	for (int i = 0; i < 3; i++) {
-		std::vector<double> temp;
-		for (int j = 0; j < 3; j++) {
-			temp.push_back(0);
-		}
-		probMat.push_back(temp);
-	}
-}
-
 void pedestrian::initProbVec(bool diag) {
 	probVec.resize(5 + 4*diag);
 }
@@ -87,16 +76,6 @@ void pedestrian::chooseMoveVec() {
 		break;
 	}
 
-}
-
-
-void pedestrian::returnProbMat() {
-	for (int i = 0; i < 3; i++) {
-		for (int j = 0; j < 3; j++) {
-			std::cout << probMat[i][j] << ":";
-		}
-		std::cout << "\n";
-	}
 }
 
 std::vector<int> pedestrian::returnPosition() {
