@@ -42,13 +42,14 @@ class floorPed {
 	double kD; //Dynamic sensitivity coefficient
 	double alpha; //Diffuse factor for the Dynamic Field
 	double delta; //Decay factor for Dynamic Field
+	int maxDynVal; //Maximum value that the dynamic field can have.
 	std::vector<std::vector<int>> door; //Vector which holds doors (vectors with x and y coordinates)
 	std::vector<double> d_L; //Holds the distance of the cell furthest away from every door
 
 	int pedGroup1; //Counts the number of pedestrians to hold the first combination of parameters.
 	int pedGroup2; //Counts the number of pedestrians to hold the second combination of parameters.
 
-	void initializeFloor(int x_, int y_, double kS_, double kD_, double alpha_, double delta_, std::vector<std::vector<int>> door_) {
+	void initializeFloor(int x_, int y_, double kS_, double kD_, double alpha_, double delta_ ,std::vector<std::vector<int>> door_, int _maxDynVal = 100) {
 		x = x_;
 		y = y_;
 		kS = kS_;
@@ -59,6 +60,8 @@ class floorPed {
 	
 		pedGroup1 = 0;
 		pedGroup2 = 0;
+
+		maxDynVal = _maxDynVal;
 
 		startMat();
 		initMat();
@@ -93,7 +96,7 @@ private:
 
 	void fillConflictVect();
 
-	void newFindNResolveConflicts();
+	void findNResolveConflicts();
 
 	void dynamicDecay();
 

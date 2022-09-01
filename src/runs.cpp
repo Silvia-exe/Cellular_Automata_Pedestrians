@@ -62,11 +62,13 @@ void getDataKSStatic(std::string path, floorPed* f1, double kS, double rho, int 
 
 			it = 0;
 			f1->changeKD(kD);
+			std::cout << "Running for " << kD << std::endl;
 
 			while (f1->numberOfPed() != 0 && it <= maxIt) {
 				f1->singleRun();
 				it++;
 			}
+
 			tempFile << kD << ":" << kS << ":" << it << "\n";
 			it = 0;
 			std::cout << "Done with " << kD << "." << std::endl;

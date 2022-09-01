@@ -36,7 +36,7 @@ void pedestrian::chooseMoveVec() {
 	for (int i = 0; i < probVec.size(); i++) {
 
 		probVecTemp += probVec[i];
-		if (rand - probVecTemp < EPSILON/10) {
+		if (rand < probVecTemp) {
 			
 			j = i;
 			max = probVec[i];
