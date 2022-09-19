@@ -32,11 +32,12 @@ class pedestrian {
 
 private:
 	void initProbVec(bool diag = 0);
+	int chooseDesiredMove();
 
 public:
 	void chooseMoveVec();
+	
 
-	void returnProbMat();
 	std::vector<int> returnPosition();
 
 	pedestrian(int x_, int y_, double pedKD_ = 0.0, double pedKS_ = 0.0, int group_ = 0) {

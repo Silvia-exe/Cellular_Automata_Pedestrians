@@ -5,7 +5,7 @@
 /*Creates subfolders in the main project folder, subfolders will be created in the order they are in the vector
 Returns the final path to the files for easy access*/
 std::string createDir(std::vector<std::string> directories) {
-	std::string hardDirec = "C:/Users/Silvia/source/repos/CellularAutomataPedestrians/CellularAutomataPedestrians";
+	std::string hardDirec = "C:/Users/DellPC/source/repos/CellularAutomataPedestrians/";
 	std::string tempDirec = hardDirec;
 	for (int i = 0; i < directories.size(); i++) {
 		if (i != directories.size()) {
@@ -28,7 +28,7 @@ void getDataKDStatic(std::string path, floorPed* f1, double kD, double rho, int 
 		std::ofstream tempFile;
 		tempFile.open(path + "/varKs_Kd" + std::to_string(kD) + "_" + std::to_string(i) + ".txt");
 
-		for (double kS = 0.05; kS <= 4.0; kS += 0.05) {
+		for (double kS = 0.1; kS <= 4.0; kS += 0.1) {
 
 			it = 0;
 

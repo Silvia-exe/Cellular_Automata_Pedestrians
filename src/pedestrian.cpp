@@ -16,7 +16,29 @@ void pedestrian::initProbVec(bool diag) {
 	probVec.resize(5 + 4*diag);
 }
 
-/*The highest probability of the probVec is found. The index indicates if the pedestrian's desired move is: 
+
+
+int pedestrian::chooseDesiredMove() {
+	double chooseCellRand = randomInt(0, 5);
+	double comparison = randomNumber01(5);
+	double tempProb = probVec[chooseCellRand];
+	bool hasPedChosen = false;
+
+	while (hasPedChosen == false) {
+		if (comparison <= tempProb){
+			hasPedChosen = true;
+			return chooseCellRand;
+		}
+		else {
+			chooseCellRand = randomInt(0, 5);
+			comparison = randomNumber01(5);
+			tempProb = probVec[chooseCellRand];
+		}
+	}
+
+}
+
+/*The highest probability of the probVec is found. The index indicates if the pedestrian's desired move is:
 0 - North
 1 - West
 2 - Stays in their initial position
@@ -26,35 +48,15 @@ void pedestrian::chooseMoveVec() {
 	/*std::vector<double>::iterator i = std::max_element(probVec.begin(), probVec.end());
 	int j = std::distance(probVec.begin(), i);
 	double maxProb = *i;*/
-	int j = -1;
 
-	double max = 0;
-	double rand = randomNumber01(5);
-	double probVecTemp = 0;
-
+	chooseDesiredMove();
 	
-	for (int i = 0; i < probVec.size(); i++) {
-
-		probVecTemp += probVec[i];
-		if (rand < probVecTemp) {
-			
-			j = i;
-			max = probVec[i];
-
-			break;
-		}
-	}
-
-	
-	desiredDirection = j;
-	probMax = max;
-
-	//std::cout << "Desired direction: " << desiredDirection << std::endl;
-	//std::cout << "Prob Max: " << probMax << std::endl;
+	desiredDirection = chooseDesiredMove();
+	probMax = probVec[desiredDirection];
 
 	//std::cout << "--------------------------oooo---------------------" << std::endl;
 
-	switch (j){
+	switch (desiredDirection){
 	case 0:
 		desiredMove[0] = position[0] - 1;
 		desiredMove[1] = position[1];
