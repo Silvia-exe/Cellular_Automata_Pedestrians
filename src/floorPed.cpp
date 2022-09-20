@@ -275,27 +275,27 @@ void floorPed::dynamicDecay() {
 	Since it will not run on walls, it is probable it wont run on doors.*/
 	for (int i = 1; i < x - 1; i++) {
 		for (int j = 1; j < y - 1; j++) {
-			if (dynField[i][j] != 0) {
+			dynMagn = dynField[i][j];
+			for(int l = 0; l < dynMagn; l++){
 				if (getRandom01() <= delta) {
-					auxDynField[i][j] -= 1;
+					dynField[i][j] -= 1;
 				}
-				else {
-					if (getRandom01() <= alpha) {
-						auxDynField[i][j] -= 1;
-						difI = 1 + getRandomInt(0, 2) * (-2);
-						if (getRandomInt(0, 2) == 0) {
-							auxDynField[i + difI][j] += 1;
-						}
-						else {
-							auxDynField[i][j + difI] += 1;
-						}
+			}
+			dynMagn = dynField[i][j];
+			for (int m = 0; m < dynMagn; m++) {
+				if (getRandom01() <= alpha) {
+					dynField[i][j] -= 1;
+					difI = 1 + getRandomInt(0, 2) * (-2);
+					if (getRandomInt(0, 2) == 0) {
+						auxDynField[i + difI][j] += 1;
+					}
+					else {
+						auxDynField[i][j + difI] += 1;
 					}
 				}
-
 			}
 		}
 	}
-
 
 	/*If the doors are in the walls, which is mostly the case, the dynamic field of them will calculate its diffussion and decay here.*/
 #ifdef DOOR_IN_WALL
@@ -305,33 +305,34 @@ void floorPed::dynamicDecay() {
 	for (int k = 0; k < door.size(); k++) {
 		i = door[k][0];
 		j = door[k][1];
-		if (dynField[i][j] != 0) {
+		dynMagn = dynField[i][j];
+		for (int l = 0; l < dynMagn; l++) {
 			if (getRandom01() <= delta) {
 				auxDynField[i][j] -= 1;
 			}
-			else {
-				if (getRandom01() <= alpha) {
-					auxDynField[i][j] -= 1;
+		}
+		dynMagn = dynField[i][j];
+		for (int m = 0; m < dynMagn; m++) {
+			if (getRandom01() <= alpha) {
+				dynField[i][j] -= 1;
 
-					difI = 1 + getRandomInt(0, 2) * (-2);
-					while (passed == false) {
-						if (i + difI < 0 || i + difI >= x || j + difI < 0 || j + difI >= y) {
-							difI = 1 + getRandomInt(0, 2) * (-2);
-						}
-						else {
-							passed = true;
-						}
-					}
-					if (getRandomInt(0, 2) == 0) {
-						auxDynField[i + difI][j] += 1;
+				difI = 1 + getRandomInt(0, 2) * (-2);
+				while (passed == false) {
+					if (i + difI < 0 || i + difI >= x || j + difI < 0 || j + difI >= y) {
+						difI = 1 + getRandomInt(0, 2) * (-2);
 					}
 					else {
-						auxDynField[i][j + difI] += 1;
+						passed = true;
 					}
 				}
 				passed = false;
+				if (getRandomInt(0, 2) == 0) {
+					auxDynField[i + difI][j] += 1;
+				}
+				else {
+					auxDynField[i][j + difI] += 1;
+				}
 			}
-
 		}
 	}
 #endif
@@ -346,9 +347,6 @@ void floorPed::dynamicDecay() {
 			}
 		}
 	}
-	/*std::cout << "----------------------------------------------------------------------------------------" << std::endl;
-	std::cout << "MaxDynValue (just calculated): " << maxDynVal << std::endl;
-	std::cout << "----------------------------------------------------------------------------------------" << std::endl;*/
 
 }
 
