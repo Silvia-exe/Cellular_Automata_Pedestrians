@@ -136,6 +136,7 @@ public:
 	void changeKS(double _kS);
 	void printKs();
 	double getKD();
+	double getKS();
 
 	void changeAlpha(double _alpha);
 	void changeDelta(double _delta);

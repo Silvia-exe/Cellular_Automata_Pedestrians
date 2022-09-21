@@ -1,16 +1,8 @@
 #define EPSILON 0.00005
 #include "stdafx.h"
 #include "pedestrian.h"
+#include "runs.h"
 
-int randomInt(int min, int max)
-{
-	return (rand() % (max - min)) + min;
-}
-
-/*Gets a random number between 0 and 1 with a selected amount of decimal spaces*/
-double randomNumber01(int decimalSpaces, double min = EPSILON) {
-	return floor(((double)randomInt(min * RAND_MAX, RAND_MAX) / RAND_MAX) * pow(10, decimalSpaces)) / pow(10, decimalSpaces);
-}
 
 void pedestrian::initProbVec(bool diag) {
 	probVec.resize(5 + 4*diag);
@@ -19,8 +11,8 @@ void pedestrian::initProbVec(bool diag) {
 
 
 int pedestrian::chooseDesiredMove() {
-	double chooseCellRand = randomInt(0, 5);
-	double comparison = randomNumber01(5);
+	double chooseCellRand = getRandomInt(0, 5);
+	double comparison = getRandom01();
 	double tempProb = probVec[chooseCellRand];
 	bool hasPedChosen = false;
 
@@ -30,8 +22,8 @@ int pedestrian::chooseDesiredMove() {
 			return chooseCellRand;
 		}
 		else {
-			chooseCellRand = randomInt(0, 5);
-			comparison = randomNumber01(5);
+			chooseCellRand = getRandomInt(0, 5);
+			comparison = getRandom01();
 			tempProb = probVec[chooseCellRand];
 		}
 	}
@@ -48,8 +40,6 @@ void pedestrian::chooseMoveVec() {
 	/*std::vector<double>::iterator i = std::max_element(probVec.begin(), probVec.end());
 	int j = std::distance(probVec.begin(), i);
 	double maxProb = *i;*/
-
-	chooseDesiredMove();
 	
 	desiredDirection = chooseDesiredMove();
 	probMax = probVec[desiredDirection];

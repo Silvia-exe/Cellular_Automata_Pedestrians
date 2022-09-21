@@ -3,28 +3,13 @@
 
 #include "stdafx.h"
 #include "floorPed.h"
+#include "runs.h"
+
 
 /*------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
 /*____________________UTILITY FUNCTIONS____________________
 Basic tools used by the class*/
-
-/*Gets a random integer between min and max-1*/
-int getRandomInt(int min, int max) {
-	return (rand() % (max - min)) + min;
-}
-
-
-/*Gets a random floating number between 0 and 1*/
-double getRandom01() {
-	return ceil(((double)rand() / RAND_MAX) * 10) / 10;
-}
-
-
-/*Gets a random number between 0 and 1 with a selected amount of decimal spaces*/
-double randomNumber_01(int decimalSpaces) {
-	return floor((getRandom01() * pow(10, decimalSpaces))) / pow(10, decimalSpaces);
-}
 
 /*Converts an x,y coordinate unto a single index.*/
 int floorPed::coord2Indx(int p) {
@@ -267,6 +252,7 @@ void floorPed::dynamicDecay() {
 	int difI;
 	bool passed = false;
 	int dynMagn = 0;
+	//int decays = 0;
 
 
 	//TODO: Fix coordinate system
@@ -279,6 +265,7 @@ void floorPed::dynamicDecay() {
 			for(int l = 0; l < dynMagn; l++){
 				if (getRandom01() <= delta) {
 					dynField[i][j] -= 1;
+					//decays++;
 				}
 			}
 			dynMagn = dynField[i][j];
@@ -306,9 +293,10 @@ void floorPed::dynamicDecay() {
 		i = door[k][0];
 		j = door[k][1];
 		dynMagn = dynField[i][j];
+	
 		for (int l = 0; l < dynMagn; l++) {
 			if (getRandom01() <= delta) {
-				auxDynField[i][j] -= 1;
+				dynField[i][j] -= 1;
 			}
 		}
 		dynMagn = dynField[i][j];
@@ -489,7 +477,7 @@ Uses the conflict vector*/
 void floorPed::findNResolveConflicts() {
 	double maxProbTemp = 0;
 	double NValue = 0;
-	double rand = randomNumber_01(5);
+	double rand = getRandom01();
 
 	int maxPed = 0;
 	int it = 0;
@@ -504,7 +492,7 @@ void floorPed::findNResolveConflicts() {
 			for (int p = 0; p < conflictVec.at(k).size(); p++) {
 				maxProbTemp += conflictVec.at(k).at(p)->probMax * (1 / NValue);
 				//std::cout << "Normalized probability of ped: " << maxProbTemp << std::endl;
-				if (rand - maxProbTemp < EPSILON / 10) {
+				if (rand < maxProbTemp) {
 					maxPed = p;
 					break;
 				}
@@ -519,13 +507,15 @@ void floorPed::findNResolveConflicts() {
 
 			maxProbTemp = 0;
 			maxPed = 0;
-			rand = randomNumber_01(5);
+			rand = getRandom01();
 			NValue = 0;
 
 		}
 		conflictVec.at(k).clear();
 	}
 }
+
+
 
 /*The conflict vect is filled with the conflicting pedestrians.
 The coordinates are linearized into a vector, and in each index the pedestrians who want to move to that coordinate are added.*/
@@ -859,7 +849,7 @@ void floorPed::changeKD(double _kD) {
 	kD = _kD;
 }
 
-/*Accesses and overwrites the value kD of the room*/
+/*Accesses and returns the value kD of the room*/
 double floorPed::getKD() {
 	return kD;
 }
@@ -867,6 +857,11 @@ double floorPed::getKD() {
 /*Accesses and overwrites the value kS of the room*/
 void floorPed::changeKS(double _kS) {
 	kS = _kS;
+}
+
+/*Accesses and return the value kS of the room*/
+double floorPed::getKS() {
+	return kS;
 }
 
 /*Accesses and overwrites the value alpha of the room*/
