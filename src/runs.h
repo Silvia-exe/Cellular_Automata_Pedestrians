@@ -1,4 +1,5 @@
 #pragma once
+#define EPSILON 0.00005
 
 #include <ctime>
 #include <string>
@@ -12,4 +13,3 @@ void getDataKSStatic(std::string path, floorPed* f1, double rho, int nDataFilesI
 void NEWgetDataKDStatic(std::string path, floorPed* f1, double kD, double rho, int nDataFilesI, int nDataFilesF, int maxIt = 10000);
 int getRandomInt(int min, int max);
 double getRandom01();
-double randomNumber01(int decimalSpaces);

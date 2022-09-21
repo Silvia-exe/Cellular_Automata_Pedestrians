@@ -2,24 +2,6 @@
 #include "stdafx.h"
 #include "runs.h"
 
-
-/*Gets a random integer between min and max-1*/
-int getRandomInt(int min, int max) {
-	return (rand() % (max - min)) + min;
-}
-
-
-/*Gets a random floating number between 0 and 1*/
-double getRandom01() {
-	return ceil(((double)rand() / RAND_MAX) * 10) / 10;
-}
-
-
-/*Gets a random number between 0 and 1 with a selected amount of decimal spaces*/
-double randomNumber01(int decimalSpaces) {
-	return floor((getRandom01() * pow(10, decimalSpaces))) / pow(10, decimalSpaces);
-}
-
 /*Creates subfolders in the main project folder, subfolders will be created in the order they are in the vector
 Returns the final path to the files for easy access*/
 std::string createDir(std::vector<std::string> directories) {
@@ -38,6 +20,7 @@ std::string createDir(std::vector<std::string> directories) {
 }
 
 void getDataKDStatic(std::string path, floorPed* f1, double rho, int nDataFilesI, int nDataFilesF, int maxIt) {
+
 	double kD = f1->getKD();
 
 	for (int i = nDataFilesI; i < nDataFilesF; i++) {
@@ -71,7 +54,6 @@ void getDataKDStatic(std::string path, floorPed* f1, double rho, int nDataFilesI
 void getDataKSStatic(std::string path, floorPed* f1, double rho, int nDataFilesI, int nDataFilesF, int maxIt) {
 
 	double kS = f1->getKS();
-
 	for (int i = nDataFilesI; i < nDataFilesF; i++) {
 
 		int it = 0;
@@ -100,9 +82,7 @@ void getDataKSStatic(std::string path, floorPed* f1, double rho, int nDataFilesI
 	}
 };
 
-void NEWgetDataKDStatic(std::string path, floorPed* f1, double rho, int nDataFilesI, int nDataFilesF, int maxIt) {
-
-	double kD = f1->getKD();
+void NEWgetDataKDStatic(std::string path, floorPed* f1, double kD, double rho, int nDataFilesI, int nDataFilesF, int maxIt) {
 
 	for (int i = nDataFilesI; i < nDataFilesF; i++) {
 

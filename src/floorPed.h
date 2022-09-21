@@ -116,7 +116,7 @@ public:
 	void NEWdensityPed(double density, double paramDensity, double kD2, double kS2);
 
 	void singleRun();
-	void NEWtestRun();
+	void singleRunGroupedParameters();
 
 	void printMovements();
 	void printStatField();

@@ -3,13 +3,28 @@
 
 #include "stdafx.h"
 #include "floorPed.h"
-#include "runs.h"
-
 
 /*------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
 /*____________________UTILITY FUNCTIONS____________________
 Basic tools used by the class*/
+
+/*Gets a random integer between min and max-1*/
+int getRandomInt(int min, int max) {
+	return (rand() % (max - min)) + min;
+}
+
+
+/*Gets a random floating number between 0 and 1*/
+double getRandom01() {
+	return ceil(((double)rand() / RAND_MAX) * 10) / 10;
+}
+
+
+/*Gets a random number between 0 and 1 with a selected amount of decimal spaces*/
+double randomNumber_01(int decimalSpaces) {
+	return floor((getRandom01() * pow(10, decimalSpaces))) / pow(10, decimalSpaces);
+}
 
 /*Converts an x,y coordinate unto a single index.*/
 int floorPed::coord2Indx(int p) {
@@ -102,7 +117,6 @@ void floorPed::initConflictVec() {
 
 /*Calculates the furthest away cell from every door*/
 void floorPed::calcDL() {
-	//std::cout << "Entered calcDL" << "\n";
 	std::vector<int> d(door.size());
 	for (int i = 0; i < x; i++) {
 		for (int j = 0; j < y; j++) {
@@ -118,7 +132,6 @@ void floorPed::calcDL() {
 
 /*Calculates the value of the static field for every door*/
 void floorPed::calcStatF() {
-	//std::cout << "Entered calcStatF" << "\n";
 	for (int i = 0; i < x; i++) {
 		for (int j = 0; j < y; j++) {
 			for (int k = 0; k < door.size(); k++) {
@@ -130,7 +143,6 @@ void floorPed::calcStatF() {
 
 /*Sets and calculates the final static field of the floor*/
 void floorPed::statFieldInit() {
-	//std::cout << "Entered statFieldInit" << "\n";
 	calcDL();
 	calcStatF();
 	if (door.size() == 1) {
@@ -247,12 +259,11 @@ void floorPed::NEWdensityPed(double density, double paramDensity, double kD2, do
 }
 
 /*Updates the dynamic field. With the use of a random number, it will decide if the dynamic field cell will decay or diffuse.
-Diffussion is defined as the cells value diminishing one and increasing one of its neighbors value by one.*/
+Diffussion is defined as increasing one of its neighbors value by one without diminishing the original cell's value.*/
 void floorPed::dynamicDecay() {
 	int difI;
 	bool passed = false;
 	int dynMagn = 0;
-	//int decays = 0;
 
 
 	//TODO: Fix coordinate system
@@ -262,16 +273,15 @@ void floorPed::dynamicDecay() {
 	for (int i = 1; i < x - 1; i++) {
 		for (int j = 1; j < y - 1; j++) {
 			dynMagn = dynField[i][j];
-			for(int l = 0; l < dynMagn; l++){
+			for (int l = 0; l < dynMagn; l++) {
 				if (getRandom01() <= delta) {
 					dynField[i][j] -= 1;
-					//decays++;
 				}
 			}
 			dynMagn = dynField[i][j];
 			for (int m = 0; m < dynMagn; m++) {
 				if (getRandom01() <= alpha) {
-					dynField[i][j] -= 1;
+					//dynField[i][j] -= 1;
 					difI = 1 + getRandomInt(0, 2) * (-2);
 					if (getRandomInt(0, 2) == 0) {
 						auxDynField[i + difI][j] += 1;
@@ -293,7 +303,6 @@ void floorPed::dynamicDecay() {
 		i = door[k][0];
 		j = door[k][1];
 		dynMagn = dynField[i][j];
-	
 		for (int l = 0; l < dynMagn; l++) {
 			if (getRandom01() <= delta) {
 				dynField[i][j] -= 1;
@@ -302,7 +311,7 @@ void floorPed::dynamicDecay() {
 		dynMagn = dynField[i][j];
 		for (int m = 0; m < dynMagn; m++) {
 			if (getRandom01() <= alpha) {
-				dynField[i][j] -= 1;
+				//dynField[i][j] -= 1;
 
 				difI = 1 + getRandomInt(0, 2) * (-2);
 				while (passed == false) {
@@ -376,7 +385,6 @@ void floorPed::calcProbVec(int p) {
 	maxFloorValue = floorValues[randomInt];
 
 	for (int i = 0; i < floorValues.size(); i++) {
-		//totFloorValue += floorValues[i];
 		if (floorValues[i] > maxFloorValue) {
 			maxFloorValue = floorValues[i];
 		}
@@ -395,9 +403,9 @@ void floorPed::calcProbVec(int p) {
 	//"South"
 	double s = probFunction(i + 1, j, maxFloorValue);
 
-	//std::cout << n << ", " << w << ", " << c << ", " << e << ", " << s << std::endl;
 
-
+	/*Correction algorithm. If the pedestrian moved north on its past move, then it left a dynamic field boson in the cell south of it. 
+	This boson is erased in order to avoid self-following.*/
 	switch (correctionCells[pedVec[p].desiredDirection])
 	{
 	case 0:
@@ -417,9 +425,8 @@ void floorPed::calcProbVec(int p) {
 	}
 
 
-	N = 1 / (n + w + c + e + s);
+	N = 1 / (n + w + c + e + s); //Normalization factor
 
-	//std::cout << "Normalization factor: " << N << std::endl;
 
 	pedVec[p].probVec[0] = N * n;
 	pedVec[p].probVec[1] = N * w;
@@ -477,7 +484,7 @@ Uses the conflict vector*/
 void floorPed::findNResolveConflicts() {
 	double maxProbTemp = 0;
 	double NValue = 0;
-	double rand = getRandom01();
+	double rand = randomNumber_01(5);
 
 	int maxPed = 0;
 	int it = 0;
@@ -485,14 +492,13 @@ void floorPed::findNResolveConflicts() {
 
 	for (int k = 0; k < conflictVec.size(); k++) {
 		if (conflictVec.at(k).size() > 0) {
+			/*Will calculate the normalization value for this transition probabilities*/
 			for (int p = 0; p < conflictVec.at(k).size(); p++) {
 				NValue += conflictVec.at(k).at(p)->probMax;
-				//std::cout << "Normalization Value: " << NValue << std::endl;
 			}
 			for (int p = 0; p < conflictVec.at(k).size(); p++) {
 				maxProbTemp += conflictVec.at(k).at(p)->probMax * (1 / NValue);
-				//std::cout << "Normalized probability of ped: " << maxProbTemp << std::endl;
-				if (rand < maxProbTemp) {
+				if (rand - maxProbTemp < EPSILON / 10) {
 					maxPed = p;
 					break;
 				}
@@ -507,15 +513,13 @@ void floorPed::findNResolveConflicts() {
 
 			maxProbTemp = 0;
 			maxPed = 0;
-			rand = getRandom01();
+			rand = randomNumber_01(5);
 			NValue = 0;
 
 		}
 		conflictVec.at(k).clear();
 	}
 }
-
-
 
 /*The conflict vect is filled with the conflicting pedestrians.
 The coordinates are linearized into a vector, and in each index the pedestrians who want to move to that coordinate are added.*/
@@ -524,7 +528,6 @@ void floorPed::fillConflictVect() {
 	for (int p = 0; p < pedVec.size(); p++) {
 		k = coord2Indx(p);
 		conflictVec[k].push_back(&pedVec[p]);
-		//std::cout << k << std::endl;
 	}
 
 }
@@ -543,6 +546,8 @@ double floorPed::NEWexpFunction(int i, int j, int p) {
 
 }
 
+/*Probability function which returns the transition probability for a pedestrian to cell i,j.
+Will return 0 is the cell is occupied or has an obstacle.*/
 double floorPed::probFunction(int i, int j, double maxFloorValues) {
 	if ((1 - occupied[i][j]) * obstacle[i][j] == 0) {
 		return 0;
@@ -553,6 +558,8 @@ double floorPed::probFunction(int i, int j, double maxFloorValues) {
 
 }
 
+/*Probability function which returns the transition probability for a pedestrian to cell i,j.
+Will return 0 is the cell is occupied or has an obstacle. This function will decrease the value of the dynamic field in 1 to avoid self-interaction with its own trace.*/
 double floorPed::probFunctionCorrection(int i, int j, double maxFloorValues) {
 	if ((1 - occupied[i][j]) * obstacle[i][j] == 0) {
 		return 0;
@@ -570,7 +577,6 @@ Single runs programmed. Works with the pedestrians to calculate their movements.
 
 /*New testRun now using the new probability vectors and efficient conflict solving.*/
 void floorPed::singleRun() {
-	//std::cout << "------------Starting iteration-------------" << std::endl;
 	/*The dynamic field is updated with the decay and difussion dynamics.*/
 	dynamicDecay();
 
@@ -595,14 +601,12 @@ void floorPed::singleRun() {
 
 /*New testRun now using the new probability vectors and efficient conflict solving. WIP
 Will be changed from testRun to finalRun, since this is the most updated version of the individual run.*/
-void floorPed::NEWtestRun() {
+void floorPed::singleRunGroupedParameters() {
 
 	resetGroupMatrix();
 
-	/*Checks which pedestrians are safe. This means, which pedestrians are standing on the door's positions*/
-	for (int k = 0; k < door.size(); k++) {
-		isPedSafe(k);
-	}
+	/*The dynamic field is updated with the decay and difussion dynamics.*/
+	dynamicDecay();
 
 	/*Pedestrians calculate their probability vector and chooses the highest probability.
 	Then, from this probability, they select their desired move.*/
@@ -616,8 +620,10 @@ void floorPed::NEWtestRun() {
 	It moves the pedestrians and adds 1 to the dynamic field.*/
 	findNResolveConflicts();
 
-	/*The dynamic field is updated with the decay and difussion dynamics.*/
-	dynamicDecay();
+	/*Checks which pedestrians are safe. This means, which pedestrians are standing on the door's positions*/
+	for (int k = 0; k < door.size(); k++) {
+		isPedSafe(k);
+	}
 
 	groupMatrixFill();
 
@@ -859,7 +865,7 @@ void floorPed::changeKS(double _kS) {
 	kS = _kS;
 }
 
-/*Accesses and return the value kS of the room*/
+/*Accesses and returns the value kS of the room*/
 double floorPed::getKS() {
 	return kS;
 }
