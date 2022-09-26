@@ -49,7 +49,7 @@ int pedestrian::chooseDesiredMove() {
 4 - South*/
 void pedestrian::chooseMoveVec() {
 
-	chooseDesiredMove(); //Comment this
+	//chooseDesiredMove(); //Comment this
 
 	desiredDirection = chooseDesiredMove();
 	probMax = probVec[desiredDirection];

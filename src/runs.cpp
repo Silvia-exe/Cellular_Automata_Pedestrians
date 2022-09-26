@@ -82,27 +82,27 @@ void getDataKSStatic(std::string path, floorPed* f1, double rho, int nDataFilesI
 	}
 };
 
-void NEWgetDataKDStatic(std::string path, floorPed* f1, double kD, double rho, int nDataFilesI, int nDataFilesF, int maxIt) {
+void getDataChangePedDensityGroups(std::string path, floorPed* f1, double rho, int nDataFilesI, int nDataFilesF, int evacPed, int maxIt) {
+
 
 	for (int i = nDataFilesI; i < nDataFilesF; i++) {
 
 		int it = 0;
 
 		std::ofstream tempFile;
-		tempFile.open(path + "/VarKs_StatickD" + std::to_string(kD) + "_" + std::to_string(i) + ".txt");
+		tempFile.open(path + "/VarRho_StaticPar" + std::to_string(i) + ".txt");
 
-		for (double kS = 0.5; kS <= 10.0; kS += 0.5) {
+		for (double groupRho = 0.05; groupRho <= 1.0; groupRho += 0.05) {
 
 			it = 0;
-			f1->resetFloor(rho);
-			f1->changeKS(kS);
+			f1->resetFloorGroups(rho, groupRho);
 
 			while (f1->numberOfPed() != 0 && it <= maxIt) {
 				f1->singleRun();
 				it++;
 			}
-			tempFile << kD << ":" << kS << ":" << it << "\n";
-			std::cout << "Done with " << kS << "." << std::endl;
+			tempFile << groupRho << ":" << it << "\n";
+			std::cout << "Done with " << groupRho << "." << std::endl;
 		}
 
 		tempFile.close();

@@ -99,8 +99,7 @@ void floorPed::initMat() {
 	}
 }
 
-/*Fills the group matrix with the group of each pedestrian, makes following the behaviour of each group easier
-Not yet in use, ignore for now*/
+/*Fills the group matrix with the group of each pedestrian, makes following the behaviour of each group easier*/
 void floorPed::groupMatrixFill() {
 	for (int p = 0; p < pedVec.size(); p++) {
 		groupMatrix[pedVec[p].position[0]][pedVec[p].position[1]] = pedVec[p].groupNumber;
@@ -226,9 +225,9 @@ void floorPed::densityPed(double density) {
 }
 
 /*Fills the floor with pedestrians of the two groups.*/
-void floorPed::NEWdensityPed(double density, double paramDensity, double kD2, double kS2) {
-	int numberPed = (x - 2) * (y - 2) * density;
-	pedGroup1 = numberPed * paramDensity; //Number of pedestrians in the first group
+void floorPed::densityPedGroups(double roomDensity, double densityGroup1) {
+	int numberPed = (x - 2) * (y - 2) * roomDensity;
+	pedGroup1 = numberPed * densityGroup1; //Number of pedestrians in the first group
 	pedGroup2 = numberPed - pedGroup1; //Number of pedestrians in the second group
 
 	//std::cout << numberPed << std::endl;
@@ -241,7 +240,7 @@ void floorPed::NEWdensityPed(double density, double paramDensity, double kD2, do
 	for (int i = 0; i < pedGroup1;) {
 		k = getRandomInt(1, x);
 		j = getRandomInt(1, y);
-		pedestrian temp = pedestrian(k, j, kD2, kS2, 1);
+		pedestrian temp = pedestrian(k, j, kD, kS, 1);
 		if (addPed(temp) == 1) {
 			i++;
 		}
@@ -251,7 +250,7 @@ void floorPed::NEWdensityPed(double density, double paramDensity, double kD2, do
 	for (int i = 0; i < pedGroup2;) {
 		k = getRandomInt(1, x);
 		j = getRandomInt(1, y);
-		pedestrian temp = pedestrian(k, j, kD, kS, 2);
+		pedestrian temp = pedestrian(k, j, kD2, kS2, 2);
 		if (addPed(temp) == 1) {
 			i++;
 		}
@@ -281,7 +280,7 @@ void floorPed::dynamicDecay() {
 			dynMagn = dynField[i][j];
 			for (int m = 0; m < dynMagn; m++) {
 				if (getRandom01() <= alpha) {
-					//dynField[i][j] -= 1;
+					dynField[i][j] -= 1;
 					difI = 1 + getRandomInt(0, 2) * (-2);
 					if (getRandomInt(0, 2) == 0) {
 						auxDynField[i + difI][j] += 1;
@@ -311,7 +310,7 @@ void floorPed::dynamicDecay() {
 		dynMagn = dynField[i][j];
 		for (int m = 0; m < dynMagn; m++) {
 			if (getRandom01() <= alpha) {
-				//dynField[i][j] -= 1;
+				dynField[i][j] -= 1;
 
 				difI = 1 + getRandomInt(0, 2) * (-2);
 				while (passed == false) {
@@ -355,6 +354,7 @@ void floorPed::isPedSafe(int k) {
 			occupied.at(pedVec[p].position[0]).at(pedVec[p].position[1]) = 0;
 			pedVec.erase(pedVec.begin() + p);
 			dynField[door[k][0]][door[k][1]] += 1;
+			savedPed++;
 		}
 		else {
 			p++;
@@ -372,7 +372,6 @@ void floorPed::calcProbVec(int p) {
 	double N = 0;
 	double maxFloorValue = 0;
 	std::vector<double> floorValues = { 0,0,0,0,0 };
-	std::vector<int> correctionCells = { 4,3,2,1,0 };
 
 	int randomInt = getRandomInt(0, 5);
 
@@ -436,20 +435,58 @@ void floorPed::calcProbVec(int p) {
 
 }
 
-void floorPed::NEWcalcProbVec(int p) {
+void floorPed::calcProbVecGroups(int p) {
 	int i = pedVec[p].position[0];
 	int j = pedVec[p].position[1];
 
 	double N = 0;
-	std::cout << "pedVec without normalizing " << std::endl;
-	double n = NEWexpFunction(i - 1, j, p);
-	double w = NEWexpFunction(i, j - 1, p);
-	double c = 1;
-	double e = NEWexpFunction(i, j + 1, p);
-	double s = NEWexpFunction(i + 1, j, p);
+	double maxFloorValue = 0;
+	std::vector<double> floorValues = { 0,0,0,0,0 };
 
+	int randomInt = getRandomInt(0, 5);
 
-	std::cout << "N: " << n << ", " << "W: " << w << ", " << "C: " << c << ", " << "E: " << e << ", " << "S: " << s << std::endl;
+	floorValues[0] = pedVec[p].pedKS * statField[i - 1][j] + pedVec[p].pedKD * dynField[i - 1][j] * (1 - occupied[i - 1][j]) * obstacle[i - 1][j];
+	floorValues[1] = pedVec[p].pedKS * statField[i][j - 1] + pedVec[p].pedKD * dynField[i][j - 1] * (1 - occupied[i][j - 1]) * obstacle[i][j - 1];
+	floorValues[2] = pedVec[p].pedKS * statField[i][j] + pedVec[p].pedKD * dynField[i][j] * (1 - occupied[i][j]) * obstacle[i][j];
+	floorValues[3] = pedVec[p].pedKS * statField[i][j + 1] + pedVec[p].pedKD * dynField[i][j + 1] * (1 - occupied[i][j + 1]) * obstacle[i][j + 1];
+	floorValues[4] = pedVec[p].pedKS * statField[i + 1][j] + pedVec[p].pedKD * dynField[i + 1][j] * (1 - occupied[i + 1][j]) * obstacle[i + 1][j];
+
+	maxFloorValue = floorValues[randomInt];
+
+	for (int i = 0; i < floorValues.size(); i++) {
+		if (floorValues[i] > maxFloorValue) {
+			maxFloorValue = floorValues[i];
+		}
+	}
+
+	double n = probFunctionGroups(i - 1, j, p, maxFloorValue);
+	double w = probFunctionGroups(i, j - 1, p,maxFloorValue);
+	occupied[i][j] = 0; // This is done so that the probability can be calculated as if the cell wasnt occupied 
+	double c = probFunctionGroups(i, j, p, maxFloorValue);
+	occupied[i][j] = 1;
+	double e = probFunctionGroups(i, j + 1, p,maxFloorValue);
+	double s = probFunctionGroups(i + 1, j, p,maxFloorValue);
+
+	/*Correction algorithm. If the pedestrian moved north on its past move, then it left a dynamic field boson in the cell south of it.
+This boson is erased in order to avoid self-following.*/
+	switch (correctionCells[pedVec[p].desiredDirection])
+	{
+	case 0:
+		n = probFunctionCorrection(i - 1, j, maxFloorValue);
+		break;
+	case 1:
+		w = probFunctionCorrection(i, j - 1, maxFloorValue);
+		break;
+	case 3:
+		e = probFunctionCorrection(i, j + 1, maxFloorValue);
+		break;
+	case 4:
+		s = probFunctionCorrection(i + 1, j, maxFloorValue);
+		break;
+	default:
+		break;
+	}
+
 
 	N = 1 / (n + w + c + e + s);
 
@@ -471,9 +508,9 @@ void floorPed::pedDecideVect() {
 }
 
 /*Runs calcProbVec for all pedestrians and then makes the pedestrian choose their new desired move*/
-void floorPed::NEWPedDecide() {
+void floorPed::pedDecideGroups() {
 	for (int p = 0; p < pedVec.size(); p++) {
-		NEWcalcProbVec(p);
+		calcProbVecGroups(p);
 		pedVec[p].chooseMoveVec();
 
 	}
@@ -532,18 +569,35 @@ void floorPed::fillConflictVect() {
 
 }
 
-/*New exponential function which will not throw NaN when the static field value is too high.
-This one takes the kD and kS of each pedestrian instead of the global parameters. Not used yet, hopefully will be.*/
-double floorPed::NEWexpFunction(int i, int j, int p) {
+/*Probability function which returns the transition probability for a pedestrian to cell i,j using its groupal sensitivity parameters
+This one takes the kD and kS of each pedestrian instead of the global parameters.*/
+double floorPed::probFunctionGroups(int i, int j, int p, double maxFloorValues) {
 
-	int x = pedVec[p].position[0];
-	int y = pedVec[p].position[1];
+	
+	double pedKD = pedVec[p].pedKD;
+	double pedKS = pedVec[p].pedKS;
+	if ((1 - occupied.at(i).at(j)) * obstacle.at(i).at(j) == 0) {
+		return 0;
+	}
+	else {
+		return exp(pedKD * dynField.at(i).at(j) + pedKS * statField.at(i).at(j) - maxFloorValues);
+	}
+
+}
+
+/*Probability function which returns the transition probability for a pedestrian to cell i,j using its groupal sensitivity parameters.
+Will return 0 is the cell is occupied or has an obstacle. This function will decrease the value of the dynamic field in 1 to avoid self-interaction with its own trace.*/
+double floorPed::probFunctionGroupsCorrection(int i, int j, int p, double maxFloorValues) {
+
 	double pedKD = pedVec[p].pedKD;
 	double pedKS = pedVec[p].pedKS;
 
-	return (exp(pedKD * (dynField[i][j] - dynField[x][y]))) *
-		(exp(pedKS * (statField[i][j] - statField[x][y]))) * ((1 - occupied[i][j])) * (obstacle[i][j]);
-
+	if ((1 - occupied[i][j]) * obstacle[i][j] == 0) {
+		return 0;
+	}
+	else {
+		return exp(pedVec[p].pedKD * (dynField[i][j] - 1) + pedKS * statField[i][j] - maxFloorValues);
+	}
 }
 
 /*Probability function which returns the transition probability for a pedestrian to cell i,j.
@@ -610,7 +664,7 @@ void floorPed::singleRunGroupedParameters() {
 
 	/*Pedestrians calculate their probability vector and chooses the highest probability.
 	Then, from this probability, they select their desired move.*/
-	NEWPedDecide();
+	pedDecideGroups();
 
 	/*The ConflictVect is filled up with the pedestrian's desired move to then resolve the conflicts.*/
 	fillConflictVect();
@@ -662,6 +716,17 @@ void floorPed::resetFloor(double rho) {
 	resetDynField();
 	resetOccupied();
 	densityPed(rho);
+}
+
+/*Resets the floor to an initial condition by:
+Reseting the dynamic field to 0
+Filling up the floor with rho density*/
+void floorPed::resetFloorGroups(double rho, double rhoGroup) {
+	erasePed();
+	resetDynField();
+	resetGroupMatrix();
+	resetOccupied();
+	densityPedGroups(rho, rhoGroup);
 }
 
 /*Resets the dynamic field to be 0 on all cells.*/
@@ -719,7 +784,7 @@ void floorPed::writeMovements2File(std::string fileName) {
 }
 
 /*Writes the group matrix unto a text file*/
-void floorPed::NEWwriteMovements2File(std::string fileName) {
+void floorPed::writeGroupMovements2File(std::string fileName) {
 	std::ofstream file;
 	int ped = 0;
 	file.open(fileName + ".txt");
@@ -848,6 +913,10 @@ or accesses and returns the current floor variables*/
 void floorPed::changeSize(int _x, int _y) {
 	x = _x;
 	y = _y;
+}
+
+int floorPed::getSavedPed() {
+	return savedPed;
 }
 
 /*Accesses and overwrites the value kD of the room*/
